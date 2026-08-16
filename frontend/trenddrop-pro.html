@@ -1146,7 +1146,20 @@ const API_BASE = "/api";
 const ONBOARD_KEY = "trenddrop_onboarding_seen";
 let currentUser = null;
 
-async function apiFetch(path, options = {}){
+const NO_REFRESH_PATHS = ["/auth/login", "/auth/signup", "/auth/refresh", "/auth/logout"];
+let refreshPromise = null;
+
+async function tryRefreshSession(){
+  if(!refreshPromise){
+    refreshPromise = fetch(`${API_BASE}/auth/refresh`, { method: "POST", credentials: "include" })
+      .then(res => res.ok)
+      .catch(() => false)
+      .finally(() => { refreshPromise = null; });
+  }
+  return refreshPromise;
+}
+
+async function apiFetch(path, options = {}, _retried = false){
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -1155,6 +1168,10 @@ async function apiFetch(path, options = {}){
   let body = null;
   try{ body = await res.json(); }catch(e){ body = null; }
   if(!res.ok){
+    if(res.status === 401 && !_retried && !NO_REFRESH_PATHS.includes(path)){
+      const refreshed = await tryRefreshSession();
+      if(refreshed) return apiFetch(path, options, true);
+    }
     const msg = (body && body.detail) ? body.detail : "Algo deu errado. Tente novamente.";
     throw new Error(msg);
   }
