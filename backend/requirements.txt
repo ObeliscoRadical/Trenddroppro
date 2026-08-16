@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+motor
+certifi
+pydantic-settings
+bcrypt
+anthropic
+cryptography==48.0.1
+apscheduler
+pyjwt
+httpx
+python-dotenv
+email-validator
+stripe

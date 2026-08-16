@@ -1,0 +1,2545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendDrop PRO — Radar de Produtos em Alta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0D1117;
+  --bg-2:#090C10;
+  --surface:#151B23;
+  --surface-2:#1C232D;
+  --surface-3:#252E3A;
+  --border:#2A333F99;
+  --border-solid:#2C3540;
+  --text:#F3F6F9;
+  --text-muted:#8B93A6;
+  --text-faint:#5B6478;
+  --amber:#00B4FF;
+  --amber-soft:#00B4FF22;
+  --teal:#7B5CFF;
+  --teal-soft:#7B5CFF22;
+  --coral:#FF4D6D;
+  --coral-soft:#FF4D6D22;
+  --green:#00E6A6;
+  --green-soft:#00E6A622;
+  --radius-s:8px;
+  --radius-m:14px;
+  --radius-l:20px;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'Inter',sans-serif;
+  --font-heading:'Poppins',sans-serif;
+  --brand-gradient:linear-gradient(135deg,var(--green) 0%,var(--amber) 55%,var(--teal) 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(ellipse 1200px 800px at 15% -10%, #16203222 0%, transparent 60%), var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-variant-numeric:tabular-nums;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+::selection{background:var(--amber);color:#0E1420;}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px;}
+
+.app{display:flex;min-height:100vh;}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:236px;flex-shrink:0;background:var(--bg-2);
+  border-right:1px solid var(--border-solid);
+  display:flex;flex-direction:column;
+  padding:24px 16px;position:sticky;top:0;height:100vh;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 28px;}
+.brand-mark{
+  width:38px;height:38px;border-radius:11px;
+  background:var(--surface-3);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 1px #ffffff14 inset, 0 4px 14px -5px #00e6a666;flex-shrink:0;
+}
+.brand-mark svg{width:21px;height:21px;display:block;}
+.brand-name{font-family:var(--font-heading);font-weight:800;font-size:16px;letter-spacing:0;line-height:1.1;}
+.brand-name .pro-tag{background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-left:1px;}
+.brand-name small{display:block;font-family:var(--font-body);font-size:9.5px;font-weight:500;color:var(--text-faint);letter-spacing:.2px;margin-top:3px;}
+
+.nav{display:flex;flex-direction:column;gap:3px;margin-top:6px;}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-s);
+  color:var(--text-muted);font-size:13.5px;font-weight:600;border:none;background:none;
+  text-align:left;width:100%;transition:background .15s,color .15s;position:relative;
+}
+.nav-item i{width:16px;font-size:14px;text-align:center;}
+.nav-item:hover{background:var(--surface);color:var(--text);}
+.nav-item.active{background:var(--surface-2);color:var(--text);}
+.nav-item.active::before{
+  content:'';position:absolute;left:-16px;top:8px;bottom:8px;width:3px;
+  background:var(--brand-gradient);border-radius:0 4px 4px 0;
+}
+.nav-count{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);background:var(--surface-3);padding:1px 6px;border-radius:20px;}
+
+.sidebar-foot{margin-top:auto;padding:14px 12px;border-radius:var(--radius-m);background:var(--surface);border:1px solid var(--border-solid);}
+.sidebar-foot p{font-size:11px;color:var(--text-faint);line-height:1.5;}
+.sidebar-foot p strong{color:var(--text-muted);}
+.topbar h1,.section-head h2,.panel-head h3,.niche-head h3,.modal-head h2,.scan-title,.empty-state h3{font-family:var(--font-heading);letter-spacing:0;}
+
+/* ===== MAIN ===== */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:22px 32px;border-bottom:1px solid var(--border-solid);
+  position:sticky;top:0;background:#0E1420EE;backdrop-filter:blur(10px);z-index:20;
+}
+.topbar h1{font-size:19px;font-weight:800;letter-spacing:-.2px;}
+.topbar .sub{font-size:12.5px;color:var(--text-muted);margin-top:2px;}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;
+  font-size:13px;font-weight:700;border:1px solid var(--border-solid);background:var(--surface);
+  color:var(--text);white-space:nowrap;transition:transform .12s,border-color .12s,background .12s;
+}
+.btn:hover{border-color:#3a4661;background:var(--surface-2);}
+.btn:active{transform:scale(.97);}
+.btn-primary{
+  background:var(--brand-gradient);color:#04140F;border:none;font-weight:800;
+  box-shadow:0 4px 18px -6px #00e6a655;
+}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-muted);}
+.btn-ghost:hover{color:var(--text);background:var(--surface);}
+
+.view{display:none;padding:28px 32px 60px;animation:fadeIn .35s ease;}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== KPIs ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.kpi-card{
+  background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);
+  padding:18px 18px 16px;position:relative;overflow:hidden;
+}
+.kpi-card::after{content:'';position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background:var(--kpi-glow,var(--amber-soft));filter:blur(6px);}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.kpi-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--kpi-soft,var(--amber-soft));color:var(--kpi-color,var(--amber));}
+.kpi-trend{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--green);}
+.kpi-value{font-size:26px;font-weight:800;font-family:var(--font-mono);letter-spacing:-.5px;}
+.kpi-label{font-size:12px;color:var(--text-muted);margin-top:4px;font-weight:500;}
+
+/* ===== SECTION HEAD ===== */
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin:32px 0 14px;}
+.section-head h2{font-size:15px;font-weight:800;}
+.section-head .link{font-size:12px;color:var(--text-muted);font-weight:600;}
+.section-head .link:hover{color:var(--amber);}
+
+/* ===== TREND CARDS (top 6) ===== */
+.trend-scroll{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+.trend-card{
+  background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);
+  padding:14px;cursor:pointer;transition:transform .15s,border-color .15s;position:relative;
+}
+.trend-card:hover{transform:translateY(-3px);border-color:#3a4661;}
+.trend-emoji{font-size:24px;}
+.trend-photo{width:100%;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--bg-2);margin-bottom:8px;display:flex;align-items:center;justify-content:center;}
+.trend-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.trend-photo.emoji-only,.trend-photo .emoji-fb{font-size:26px;}
+.trend-name{font-size:12.5px;font-weight:700;margin-top:8px;line-height:1.3;min-height:32px;}
+.trend-cat{font-size:10px;color:var(--text-faint);margin-top:2px;}
+.trend-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.trend-margin{font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:var(--green);}
+.badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.3px;}
+.badge.baixa{background:var(--green-soft);color:var(--green);}
+.badge.media{background:var(--amber-soft);color:var(--amber);}
+.badge.alta{background:var(--coral-soft);color:var(--coral);}
+
+/* ===== SCORE RING ===== */
+.score-ring{
+  width:40px;height:40px;border-radius:50%;position:relative;flex-shrink:0;
+  background:conic-gradient(var(--ring-c,var(--amber)) calc(var(--sc,0)*3.6deg), var(--surface-3) 0deg);
+  display:flex;align-items:center;justify-content:center;
+}
+.score-ring::before{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--surface);}
+.score-ring span{position:relative;font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--ring-c,var(--amber));}
+.score-ring.sm{width:30px;height:30px;}
+.score-ring.sm::before{inset:3px;}
+.score-ring.sm span{font-size:9px;}
+.score-ring.lg{width:64px;height:64px;}
+.score-ring.lg::before{inset:6px;}
+.score-ring.lg span{font-size:16px;}
+
+/* ===== CHARTS ROW ===== */
+.charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-top:28px;}
+.panel{background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);padding:20px;}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.panel-head h3{font-size:13.5px;font-weight:700;}
+.panel-head .tag{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);}
+.chart-wrap{height:230px;position:relative;}
+
+/* ===== TABLE ===== */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{
+  text-align:left;padding:10px 12px;color:var(--text-faint);font-weight:600;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border-solid);white-space:nowrap;
+}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr{transition:background .12s;cursor:pointer;}
+tbody tr:hover{background:var(--surface);}
+.prod-cell{display:flex;align-items:center;gap:10px;}
+.prod-cell .em{font-size:19px;}
+.prod-thumb{width:34px;height:34px;border-radius:8px;overflow:hidden;background:var(--bg-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.prod-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.prod-thumb.emoji-only,.prod-thumb .emoji-fb{font-size:17px;}
+.prod-cell .nm{font-weight:700;font-size:12.5px;}
+.prod-cell .ct{font-size:10.5px;color:var(--text-faint);}
+.trend-up{color:var(--green);font-weight:700;font-family:var(--font-mono);font-size:11.5px;}
+.trend-down{color:var(--coral);font-weight:700;font-family:var(--font-mono);font-size:11.5px;}
+.trend-stable{color:var(--text-muted);font-weight:700;font-family:var(--font-mono);font-size:11.5px;}
+.icon-btn{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border-solid);background:var(--surface-2);
+  color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;transition:.15s;
+}
+.icon-btn:hover{color:var(--amber);border-color:var(--amber);}
+.icon-btn.active{color:var(--green);border-color:var(--green);background:var(--green-soft);}
+
+/* ===== FILTER BAR ===== */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.filter-bar input[type="text"]{
+  flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border-solid);color:var(--text);
+  padding:10px 14px 10px 38px;border-radius:10px;font-size:13px;
+}
+.search-wrap{position:relative;flex:1;min-width:220px;}
+.search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-faint);font-size:12px;}
+.filter-bar select{
+  background:var(--surface);border:1px solid var(--border-solid);color:var(--text);
+  padding:10px 12px;border-radius:10px;font-size:12.5px;font-weight:600;
+}
+
+/* ===== PRODUCT GRID ===== */
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.product-card{
+  background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);
+  padding:16px;cursor:pointer;transition:transform .15s,border-color .15s;
+}
+.product-card:hover{transform:translateY(-3px);border-color:#3a4661;}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;}
+.pc-emoji{font-size:28px;}
+.pc-photo{width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--bg-2);margin-bottom:10px;display:flex;align-items:center;justify-content:center;}
+.pc-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.pc-photo.emoji-only,.pc-photo .emoji-fb{font-size:34px;}
+.pc-name{font-weight:700;font-size:13.5px;margin-top:10px;line-height:1.3;}
+.pc-cat{font-size:10.5px;color:var(--text-faint);margin-top:2px;}
+.pc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.chip{font-size:9.5px;font-weight:600;color:var(--teal);background:var(--teal-soft);padding:3px 8px;border-radius:20px;}
+.pc-metrics{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.pc-price{font-family:var(--font-mono);font-size:12px;}
+.pc-price .sell{font-weight:700;color:var(--text);}
+.pc-price .cost{color:var(--text-faint);text-decoration:line-through;margin-right:4px;font-size:10.5px;}
+.pc-margin{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--green);}
+
+/* ===== NICHOS ===== */
+.niche-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.niche-card{background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-l);padding:22px;}
+.niche-head{display:flex;align-items:center;gap:12px;}
+.niche-emoji{width:44px;height:44px;border-radius:12px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.niche-head h3{font-size:15px;font-weight:800;}
+.niche-head .comp{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.niche-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0;}
+.nm-box{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.nm-box .v{font-family:var(--font-mono);font-weight:700;font-size:14px;}
+.nm-box .l{font-size:9.5px;color:var(--text-faint);margin-top:3px;text-transform:uppercase;letter-spacing:.4px;}
+.niche-desc{font-size:12.5px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;}
+.niche-tags{display:flex;flex-wrap:wrap;gap:6px;}
+
+/* ===== WATCHLIST ===== */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:80px 20px;color:var(--text-muted);
+}
+.empty-state i{font-size:36px;color:var(--text-faint);margin-bottom:16px;}
+.empty-state h3{font-size:15px;color:var(--text);margin-bottom:6px;}
+.empty-state p{font-size:12.5px;max-width:340px;}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;background:#05070CDD;backdrop-filter:blur(4px);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
+.modal{
+  background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-l);
+  width:100%;max-width:640px;max-height:88vh;overflow-y:auto;padding:28px;position:relative;
+}
+.modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;border:1px solid var(--border-solid);background:var(--surface-2);color:var(--text-muted);display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{color:var(--text);}
+.modal-head{display:flex;align-items:center;gap:16px;}
+.modal-emoji{font-size:42px;}
+.modal-photo{width:72px;height:72px;border-radius:14px;overflow:hidden;background:var(--bg-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.modal-photo.emoji-only,.modal-photo .emoji-fb{font-size:36px;}
+.modal-head h2{font-size:18px;font-weight:800;}
+.modal-head .cat{font-size:12px;color:var(--text-faint);margin-top:3px;}
+.modal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0;}
+.mg-box{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;}
+.mg-box .v{font-family:var(--font-mono);font-weight:700;font-size:14.5px;}
+.mg-box .l{font-size:9px;color:var(--text-faint);margin-top:4px;text-transform:uppercase;letter-spacing:.4px;}
+.modal-section{margin-top:20px;}
+.modal-section h4{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);margin-bottom:10px;font-weight:700;}
+.modal-section p{font-size:13px;color:var(--text-muted);line-height:1.6;}
+.tips-list{display:flex;flex-direction:column;gap:8px;}
+.tips-list li{display:flex;gap:9px;font-size:12.5px;color:var(--text-muted);line-height:1.5;list-style:none;}
+.tips-list i{color:var(--amber);margin-top:3px;font-size:11px;}
+.plat-list{display:flex;gap:8px;flex-wrap:wrap;}
+.plat-chip{font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border-solid);}
+.modal-actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;}
+
+/* ===== SCAN OVERLAY ===== */
+.scan-overlay{position:fixed;inset:0;background:#05070CF2;z-index:200;display:none;align-items:center;justify-content:center;}
+.scan-overlay.open{display:flex;}
+.scan-box{width:100%;max-width:480px;padding:20px;}
+.scan-radar{
+  width:180px;height:180px;border-radius:50%;margin:0 auto 26px;position:relative;
+  background:repeating-radial-gradient(circle, #28324640 0 1px, transparent 1px 34px);
+  border:1px solid var(--border-solid);overflow:hidden;
+}
+.scan-radar::before{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg, var(--green) 0deg, transparent 55deg, transparent 360deg);
+  animation:spin 1.8s linear infinite;opacity:.85;
+}
+.scan-radar::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;background:var(--green);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 12px 3px var(--green);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.scan-title{text-align:center;font-weight:800;font-size:16px;margin-bottom:4px;}
+.scan-sub{text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:22px;}
+.scan-bar-track{height:6px;background:var(--surface-2);border-radius:20px;overflow:hidden;margin-bottom:18px;}
+.scan-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--amber),var(--teal));border-radius:20px;transition:width .3s linear;}
+.scan-log{display:flex;flex-direction:column;gap:8px;font-family:var(--font-mono);font-size:11.5px;min-height:170px;}
+.scan-log-item{display:flex;align-items:center;gap:10px;color:var(--text-faint);opacity:.4;transition:.3s;}
+.scan-log-item.done{opacity:1;color:var(--text-muted);}
+.scan-log-item .dot{width:16px;height:16px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;}
+.scan-log-item.done .dot{background:var(--green-soft);color:var(--green);}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface-2);border:1px solid var(--border-solid);color:var(--text);
+  padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;
+  box-shadow:0 12px 30px -8px #000a;z-index:300;opacity:0;pointer-events:none;transition:.3s;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast i{color:var(--green);}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .trend-scroll{grid-template-columns:repeat(3,1fr);}
+  .charts-row{grid-template-columns:1fr;}
+  .product-grid{grid-template-columns:repeat(2,1fr);}
+  .niche-grid{grid-template-columns:1fr;}
+  .modal-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media (max-width:760px){
+  .sidebar{
+    position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:auto;flex-direction:row;
+    padding:8px 6px;border-right:none;border-top:1px solid var(--border-solid);z-index:50;
+    justify-content:space-around;align-items:center;
+  }
+  .brand,.sidebar-foot{display:none;}
+  .nav{flex-direction:row;width:100%;justify-content:space-around;}
+  .nav-item{flex-direction:column;gap:4px;font-size:9.5px;padding:6px 4px;}
+  .nav-item i{font-size:15px;}
+  .nav-item.active::before{display:none;}
+  .nav-count{display:none;}
+  .main{padding-bottom:70px;}
+  .topbar{padding:16px 18px;}
+  .view{padding:18px 18px 40px;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .trend-scroll{grid-template-columns:repeat(2,1fr);}
+  .product-grid{grid-template-columns:1fr;}
+  .modal-grid{grid-template-columns:repeat(2,1fr);}
+  .filter-bar select{flex:1;}
+  .module-switch,.user-chip,.foot-links{display:none;}
+}
+
+/* ===== AUTH SCREEN ===== */
+.auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px;}
+.auth-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 900px 700px at 50% -10%, #00e6a614 0%, transparent 60%);pointer-events:none;}
+.auth-card{position:relative;width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-l);padding:34px 30px;text-align:center;}
+.auth-logo{width:52px;height:52px;margin:0 auto 14px;}
+.auth-logo svg{width:100%;height:100%;}
+.auth-brand{font-family:var(--font-heading);font-weight:800;font-size:20px;}
+.auth-brand .pro-tag{background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-left:2px;}
+.auth-tagline{font-size:11.5px;color:var(--text-faint);margin-top:6px;margin-bottom:24px;}
+.auth-tabs{display:flex;background:var(--bg-2);border-radius:10px;padding:4px;margin-bottom:20px;}
+.auth-tab{flex:1;padding:9px;border:none;background:none;color:var(--text-muted);font-weight:700;font-size:12.5px;border-radius:8px;}
+.auth-tab.active{background:var(--surface-2);color:var(--text);}
+.auth-form{display:flex;flex-direction:column;gap:12px;text-align:left;}
+.auth-form label{font-size:11px;color:var(--text-muted);font-weight:600;display:flex;flex-direction:column;gap:6px;}
+.auth-form input{background:var(--bg-2);border:1px solid var(--border-solid);color:var(--text);padding:10px 12px;border-radius:9px;font-size:13px;font-family:inherit;}
+.auth-form input:focus{border-color:var(--green);}
+.auth-error{font-size:11.5px;color:var(--coral);min-height:14px;}
+.auth-submit{width:100%;justify-content:center;margin-top:4px;padding:11px;}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--text-faint);font-size:11px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border-solid);}
+.auth-google{width:100%;justify-content:center;padding:11px;}
+.auth-note{font-size:10.5px;color:var(--text-faint);margin-top:16px;line-height:1.5;}
+
+/* ===== TOUR / ONBOARDING ===== */
+.tour-overlay{position:fixed;inset:0;background:#05070CDD;backdrop-filter:blur(3px);z-index:400;display:none;align-items:center;justify-content:center;padding:20px;}
+.tour-overlay.open{display:flex;}
+.tour-box{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-l);padding:28px;text-align:center;}
+.tour-progress{display:flex;gap:5px;justify-content:center;margin-bottom:20px;}
+.tour-progress span{width:20px;height:3px;border-radius:3px;background:var(--surface-3);}
+.tour-progress span.done{background:var(--brand-gradient);}
+.tour-icon{width:46px;height:46px;border-radius:12px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:19px;margin:0 auto 16px;}
+.tour-box h3{font-family:var(--font-heading);font-size:15.5px;margin-bottom:8px;}
+.tour-box p{font-size:12.5px;color:var(--text-muted);line-height:1.6;}
+.tour-actions{display:flex;gap:10px;margin-top:22px;}
+.tour-actions .btn{flex:1;justify-content:center;}
+
+/* ===== MODULE SWITCH / SIDEBAR EXTRAS ===== */
+.module-switch{display:flex;flex-direction:column;gap:4px;margin-bottom:18px;background:var(--bg-2);border-radius:10px;padding:4px;}
+.module-btn{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;border:none;background:none;color:var(--text-muted);font-size:11.5px;font-weight:700;text-align:left;}
+.module-btn i{width:14px;text-align:center;font-size:12px;}
+.module-btn.active{background:var(--surface-2);color:var(--text);}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--border-solid);margin-bottom:10px;}
+.user-avatar{width:32px;height:32px;border-radius:9px;background:var(--brand-gradient);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#04140F;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:700;}
+.user-loja{font-size:10px;color:var(--text-faint);margin-top:1px;}
+.foot-links{display:flex;gap:6px;margin-bottom:10px;}
+.foot-link{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:8px;border:1px solid var(--border-solid);background:var(--surface-2);color:var(--text-muted);font-size:10.5px;font-weight:700;}
+.foot-link:hover{color:var(--text);border-color:#3a4661;}
+.plan-chip{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--border-solid);margin-bottom:10px;}
+.plan-chip-label{font-size:11px;font-weight:700;color:var(--text-muted);display:flex;align-items:center;gap:6px;}
+.plan-chip.full .plan-chip-label{color:var(--green);}
+.plan-chip-btn{width:100%;justify-content:center;padding:8px;font-size:11px;}
+
+/* ===== DASHBOARD FINANCEIRO (Afiliados) ===== */
+.charts-row-even{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.log-feed{display:flex;flex-direction:column;gap:11px;max-height:280px;overflow-y:auto;}
+.log-item{display:flex;gap:10px;align-items:flex-start;font-size:12px;}
+.log-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.log-item .lt{flex:1;line-height:1.4;}
+.log-item .lm{color:var(--text-faint);font-size:10.5px;margin-top:1px;}
+.log-item .ltime{color:var(--text-faint);font-family:var(--font-mono);font-size:10px;white-space:nowrap;}
+.forecast-item{border:1px solid var(--border-solid);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;}
+.forecast-item:last-child{margin-bottom:0;}
+.forecast-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.forecast-plat{font-weight:700;font-size:12.5px;}
+.forecast-val{font-family:var(--font-mono);font-weight:700;color:var(--text);font-size:12px;}
+.forecast-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-muted);line-height:1.5;}
+.forecast-item.open .forecast-detail{display:block;}
+.forecast-item i.chev{transition:transform .2s;color:var(--text-faint);font-size:10px;}
+.forecast-item.open i.chev{transform:rotate(180deg);}
+.onboard-step{display:flex;align-items:center;gap:14px;border:1px solid var(--border-solid);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.onboard-step:last-child{margin-bottom:0;}
+.onboard-check{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--surface-3);color:var(--text-faint);}
+.onboard-step.done .onboard-check{background:var(--green-soft);color:var(--green);}
+.onboard-body{flex:1;}
+.onboard-body h4{font-size:13px;font-weight:700;margin-bottom:2px;}
+.onboard-step.done .onboard-body h4{color:var(--text-muted);text-decoration:line-through;text-decoration-color:var(--border-solid);}
+.onboard-body p{font-size:11.5px;color:var(--text-muted);}
+.onboard-done-banner{display:flex;align-items:center;gap:14px;background:var(--green-soft);border:1px solid var(--green);border-radius:10px;padding:16px;margin-bottom:16px;}
+.onboard-done-banner i{font-size:20px;color:var(--green);}
+.onboard-done-banner p{font-size:12.5px;color:var(--text);line-height:1.5;}
+.onboard-progress-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.onboard-progress-head h3{font-size:13.5px;font-weight:700;}
+.onboard-progress-head span{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+.onboard-focus-tabs{display:inline-flex;background:var(--surface);border:1px solid var(--border-solid);border-radius:10px;padding:4px;margin-bottom:18px;}
+.onboard-focus-tab{padding:8px 16px;border:none;background:none;color:var(--text-muted);font-weight:700;font-size:12px;border-radius:7px;}
+.onboard-focus-tab.active{background:var(--surface-2);color:var(--text);}
+.onboard-resources{margin-top:22px;}
+.onboard-resources-head{font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;}
+.onboard-resource-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.onboard-resource-card{background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);padding:16px;}
+.onboard-resource-card h4{font-size:13px;font-weight:700;margin-bottom:4px;}
+.onboard-resource-card p{font-size:11.5px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;}
+
+/* ===== HUB DE AFILIAÇÕES ===== */
+.aff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.aff-card{background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);padding:18px;}
+.aff-icon-tile{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;}
+.aff-top{display:flex;align-items:center;gap:12px;}
+.aff-name{font-weight:700;font-size:13px;}
+.status-pill{display:inline-block;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;margin-top:4px;}
+.status-pill.ok{background:var(--green-soft);color:var(--green);}
+.status-pill.warn{background:var(--amber-soft);color:var(--amber);}
+.status-pill.off{background:var(--surface-3);color:var(--text-faint);}
+.aff-meta{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap;}
+.aff-meta-box{background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px 6px;flex:1;text-align:center;min-width:70px;}
+.aff-meta-box .v{font-family:var(--font-mono);font-weight:700;font-size:12px;}
+.aff-meta-box .l{font-size:8.5px;color:var(--text-faint);margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
+.aff-actions{display:flex;gap:8px;margin-top:4px;}
+.aff-link{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px;margin-top:12px;}
+.aff-link:hover{color:var(--green);}
+.modal-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0;}
+
+/* ===== CONTAS CONECTADAS ===== */
+.conn-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.conn-card{background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-l);padding:22px;}
+.conn-head{display:flex;align-items:center;gap:12px;}
+.conn-icons{display:flex;gap:4px;}
+.conn-icons i{width:34px;height:34px;border-radius:9px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.conn-config{margin:18px 0;display:flex;flex-direction:column;}
+.conn-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;font-size:11px;padding:9px 0;border-bottom:1px solid var(--border);}
+.conn-row:last-child{border-bottom:none;}
+.conn-row .k{color:var(--text-faint);white-space:nowrap;padding-top:2px;}
+.conn-row .v{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-align:right;word-break:break-all;}
+.conn-scopes{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;}
+
+/* ===== CATÁLOGO DINÂMICO / AUTO-LIMPEZA ===== */
+.view-tabs{display:inline-flex;background:var(--surface);border:1px solid var(--border-solid);border-radius:10px;padding:4px;margin-bottom:18px;}
+.view-tab,.lang-tab{padding:8px 16px;border:none;background:none;color:var(--text-muted);font-weight:700;font-size:12px;border-radius:7px;display:flex;align-items:center;gap:7px;}
+.view-tab.active,.lang-tab.active{background:var(--surface-2);color:var(--text);}
+.view-tab .nav-count{background:var(--surface-3);}
+.badge.mom-alta{background:var(--green-soft);color:var(--green);}
+.badge.mom-media{background:var(--amber-soft);color:var(--amber);}
+.badge.mom-baixa{background:var(--surface-3);color:var(--text-faint);}
+.badge.mom-negativa{background:var(--coral-soft);color:var(--coral);}
+.catalog-info{background:var(--surface);border:1px solid var(--border-solid);border-left:3px solid var(--teal);border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:12px;color:var(--text-muted);line-height:1.6;}
+.btn-danger{background:linear-gradient(135deg,var(--coral),#e04a63);color:#2a0a10;border:none;font-weight:800;}
+.queue-item{border:1px solid var(--border-solid);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface);}
+.queue-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.queue-name{font-weight:700;font-size:13.5px;}
+.queue-meta{font-size:11px;color:var(--text-faint);margin-top:3px;}
+.queue-reason{font-size:12px;color:var(--text-muted);margin:12px 0;line-height:1.5;background:var(--bg-2);border-radius:8px;padding:10px 12px;}
+.queue-stats{display:flex;gap:8px;margin:10px 0;}
+.queue-action-note{font-size:11.5px;color:var(--text-muted);margin-bottom:12px;}
+.queue-action-note strong{color:var(--text);}
+.queue-actions{display:flex;gap:8px;margin-top:4px;}
+
+/* ===== GERAÇÃO DE CONTEÚDO COM IA ===== */
+.gen-picker{display:flex;gap:10px;margin-top:14px;}
+.gen-picker select{flex:1;background:var(--bg-2);border:1px solid var(--border-solid);color:var(--text);padding:10px 12px;border-radius:10px;font-size:12.5px;font-family:inherit;}
+.gen-status{margin-top:16px;padding:13px 16px;background:var(--bg-2);border-radius:10px;font-size:12px;color:var(--text-muted);display:none;align-items:center;gap:10px;}
+.hooks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.hook-card{background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);padding:16px;position:relative;}
+.hook-card.best{border-color:var(--green);}
+.hook-best-badge{position:absolute;top:-9px;left:14px;background:var(--green);color:#04140F;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;}
+.hook-score{margin-bottom:10px;}
+.hook-text{font-size:12.5px;font-weight:600;line-height:1.5;margin-bottom:6px;}
+.hook-text.en{color:var(--text-muted);font-weight:400;font-size:11.5px;}
+.hook-motivo{font-size:11px;color:var(--text-faint);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.content-bundle{display:flex;flex-direction:column;gap:14px;}
+.content-block{background:var(--surface);border:1px solid var(--border-solid);border-radius:var(--radius-m);padding:18px;}
+.content-block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.content-block-head h4{font-family:var(--font-heading);font-size:13px;font-weight:700;}
+.content-block p{font-size:12.5px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap;}
+.copy-btn{background:none;border:1px solid var(--border-solid);color:var(--text-faint);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.copy-btn:hover{color:var(--text);}
+.affiliate-disclosure{font-size:10.5px;color:var(--text-faint);font-style:italic;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);}
+
+/* ===== REVISÃO DE CONTEÚDO ===== */
+.review-bulk-bar{display:flex;align-items:center;gap:16px;margin-bottom:14px;font-size:12px;color:var(--text-muted);}
+.review-bulk-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;}
+.review-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border-solid);border-radius:10px;margin-bottom:8px;background:var(--surface);}
+.review-row.active{border-color:var(--green);}
+.review-row-emoji{font-size:18px;}
+.review-row-main{flex:1;min-width:0;}
+.review-row-name{font-weight:700;font-size:12.5px;}
+.review-row-time{font-size:10.5px;color:var(--text-faint);margin-top:2px;}
+.review-hook-preview{background:var(--bg-2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);margin:14px 0;}
+.review-hook-preview strong{color:var(--text);}
+.review-fields{display:flex;flex-direction:column;gap:12px;}
+.review-fields label{font-size:11px;color:var(--text-muted);font-weight:600;display:flex;flex-direction:column;gap:6px;}
+.review-fields textarea{background:var(--bg-2);border:1px solid var(--border-solid);color:var(--text);padding:10px 12px;border-radius:9px;font-size:12.5px;font-family:inherit;resize:vertical;line-height:1.5;}
+.review-nav{display:flex;justify-content:space-between;margin-top:16px;}
+
+/* ===== CENTRO DE COMANDO IA ===== */
+.cmd-master{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+.cmd-master-title{font-family:var(--font-heading);font-weight:700;font-size:14px;}
+.cmd-master-sub{font-size:11.5px;color:var(--text-muted);margin-top:4px;max-width:420px;line-height:1.5;}
+.cmd-rules{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.cmd-rules label{font-size:11px;color:var(--text-muted);font-weight:600;display:flex;flex-direction:column;gap:6px;}
+.cmd-rules input[type="number"]{background:var(--bg-2);border:1px solid var(--border-solid);color:var(--text);padding:9px 12px;border-radius:9px;font-size:13px;font-family:inherit;}
+.cmd-check{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--text-muted);cursor:pointer;line-height:1.5;}
+.cmd-check input{margin-top:2px;}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:var(--surface-3);border-radius:20px;transition:.2s;cursor:pointer;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:var(--text);border-radius:50%;transition:.2s;}
+.toggle-switch input:checked + .toggle-slider{background:var(--brand-gradient);}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);background:#04140F;}
+
+@media (max-width:1100px){
+  .charts-row-even{grid-template-columns:1fr;}
+  .aff-grid{grid-template-columns:repeat(2,1fr);}
+  .conn-grid{grid-template-columns:1fr;}
+  .hooks-grid{grid-template-columns:1fr;}
+}
+@media (max-width:760px){
+  .aff-grid{grid-template-columns:1fr;}
+  .modal-grid-3{grid-template-columns:repeat(3,1fr);}
+  .conn-row{flex-direction:column;align-items:flex-start;gap:4px;}
+  .conn-row .v{text-align:left;}
+  .conn-scopes{justify-content:flex-start;}
+  .queue-top{flex-direction:column;}
+  .gen-picker{flex-direction:column;}
+  .cmd-rules{grid-template-columns:1fr;}
+  .cmd-master{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2.4C12 2.4 6.1 9.7 6.1 14.4C6.1 18.1 8.7 21 12 21C15.3 21 17.9 18.1 17.9 14.4C17.9 9.7 12 2.4 12 2.4Z" fill="url(#flameGrad2)"/>
+        <path d="M12 9.6C12 9.6 9.7 12.5 9.7 14.4C9.7 15.8 10.7 16.9 12 16.9C13.3 16.9 14.3 15.8 14.3 14.4C14.3 12.5 12 9.6 12 9.6Z" fill="#0D1117" fill-opacity=".5"/>
+        <defs>
+          <linearGradient id="flameGrad2" x1="12" y1="21" x2="12" y2="2.4" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#00E6A6"/><stop offset="0.55" stop-color="#00B4FF"/><stop offset="1" stop-color="#7B5CFF"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="auth-brand">TrendDrop<span class="pro-tag">PRO</span></div>
+    <div class="auth-tagline">Descobrimos o que é tendência. Você aproveita primeiro.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" type="button">Entrar</button>
+      <button class="auth-tab" data-tab="cadastro" type="button">Criar conta</button>
+    </div>
+    <form id="loginForm" class="auth-form">
+      <label>E-mail<input type="email" id="loginEmail" required placeholder="voce@email.com"></label>
+      <label>Senha<input type="password" id="loginPassword" required placeholder="••••••••"></label>
+      <div class="auth-error" id="loginError"></div>
+      <button type="submit" class="btn btn-primary auth-submit">Entrar</button>
+    </form>
+    <form id="cadastroForm" class="auth-form" style="display:none;">
+      <label>Nome da loja<input type="text" id="cadLoja" required placeholder="Minha Loja"></label>
+      <label>Seu nome<input type="text" id="cadNome" required placeholder="Como podemos te chamar"></label>
+      <label>E-mail<input type="email" id="cadEmail" required placeholder="voce@email.com"></label>
+      <label>Senha<input type="password" id="cadSenha" required placeholder="Crie uma senha"></label>
+      <label class="cmd-check"><input type="checkbox" id="cadTerms"><span>Li e concordo com os <a href="termos.html" target="_blank">Termos de Uso</a> e a <a href="privacidade.html" target="_blank">Política de Privacidade</a></span></label>
+      <div class="auth-error" id="cadError"></div>
+      <button type="submit" class="btn btn-primary auth-submit" id="cadSubmitBtn" disabled>Criar conta</button>
+    </form>
+    <div class="auth-divider"><span>ou</span></div>
+    <button class="btn auth-google" id="googleLoginBtn" type="button"><i class="fa-brands fa-google"></i>Continuar com Google</button>
+    <p class="auth-note">Seus dados de login são reais e protegidos. Ao continuar, você concorda com os <a href="termos.html" target="_blank">Termos de Uso</a> e a <a href="privacidade.html" target="_blank">Política de Privacidade</a>.</p>
+  </div>
+</div>
+
+<!-- TOUR / ONBOARDING -->
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-box">
+    <div class="tour-progress" id="tourProgress"></div>
+    <div class="tour-icon" id="tourIcon"><i class="fa-solid fa-compass"></i></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="tour-actions">
+      <button class="btn btn-ghost" id="tourSkip" type="button">Pular</button>
+      <button class="btn btn-primary" id="tourNext" type="button">Próximo</button>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.4C12 2.4 6.1 9.7 6.1 14.4C6.1 18.1 8.7 21 12 21C15.3 21 17.9 18.1 17.9 14.4C17.9 9.7 12 2.4 12 2.4Z" fill="url(#flameGrad)"/>
+          <path d="M12 9.6C12 9.6 9.7 12.5 9.7 14.4C9.7 15.8 10.7 16.9 12 16.9C13.3 16.9 14.3 15.8 14.3 14.4C14.3 12.5 12 9.6 12 9.6Z" fill="#0D1117" fill-opacity=".5"/>
+          <defs>
+            <linearGradient id="flameGrad" x1="12" y1="21" x2="12" y2="2.4" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#00E6A6"/>
+              <stop offset="0.55" stop-color="#00B4FF"/>
+              <stop offset="1" stop-color="#7B5CFF"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand-name">TrendDrop<span class="pro-tag">PRO</span><small>Você aproveita primeiro</small></div>
+    </div>
+    <nav class="nav" id="navTop">
+      <button class="nav-item" data-view="onboarding"><i class="fa-solid fa-flag-checkered"></i>Primeiros Passos<span class="nav-count" id="onboardNavCount">0/6</span></button>
+    </nav>
+    <div class="module-switch" id="moduleSwitch">
+      <button class="module-btn active" data-module="dropship" type="button"><i class="fa-solid fa-magnifying-glass-chart"></i>Pesquisa de Produtos</button>
+      <button class="module-btn" data-module="afiliados" type="button"><i class="fa-solid fa-handshake"></i>Marketing de Afiliados</button>
+    </div>
+    <nav class="nav" id="navDropship">
+      <button class="nav-item active" data-view="dashboard"><i class="fa-solid fa-chart-simple"></i>Dashboard</button>
+      <button class="nav-item" data-view="produtos"><i class="fa-solid fa-boxes-stacked"></i>Produtos<span class="nav-count" id="produtosNavCount">18</span></button>
+      <button class="nav-item" data-view="nichos"><i class="fa-solid fa-layer-group"></i>Nichos<span class="nav-count">8</span></button>
+      <button class="nav-item" data-view="watchlist"><i class="fa-solid fa-star"></i>Watchlist<span class="nav-count" id="watchCount">0</span></button>
+    </nav>
+    <nav class="nav" id="navAfiliados" style="display:none;">
+      <button class="nav-item" data-view="fin-dashboard"><i class="fa-solid fa-sack-dollar"></i>Dashboard Financeiro</button>
+      <button class="nav-item" data-view="aff-hub"><i class="fa-solid fa-diagram-project"></i>Hub de Afiliações</button>
+      <button class="nav-item" data-view="contas"><i class="fa-solid fa-plug"></i>Contas Conectadas</button>
+      <button class="nav-item" data-view="catalogo"><i class="fa-solid fa-database"></i>Catálogo Dinâmico<span class="nav-count" id="queueNavCount">0</span></button>
+      <button class="nav-item" data-view="geracao"><i class="fa-solid fa-wand-magic-sparkles"></i>Geração de Conteúdo</button>
+      <button class="nav-item" data-view="revisao"><i class="fa-solid fa-clipboard-check"></i>Revisão de Conteúdo<span class="nav-count" id="reviewNavCount">0</span></button>
+      <button class="nav-item" data-view="comando"><i class="fa-solid fa-sliders"></i>Centro de Comando IA</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-chip" id="userChip">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div><div class="user-name" id="userName">—</div><div class="user-loja" id="userLoja">—</div></div>
+      </div>
+      <div class="plan-chip" id="planChip">
+        <span class="plan-chip-label" id="planChipLabel">Plano Básico</span>
+        <button class="btn btn-primary plan-chip-btn" id="planChipBtn" type="button">Assinar Full</button>
+      </div>
+      <div class="foot-links">
+        <button class="foot-link" id="tourBtn" type="button"><i class="fa-solid fa-compass"></i>Tour</button>
+        <button class="foot-link" id="logoutBtn" type="button"><i class="fa-solid fa-right-from-bracket"></i>Sair</button>
+      </div>
+      <p><strong>Simulação de pesquisa.</strong> Dados gerados para demonstração — não usam APIs reais de Trends/AliExpress.</p>
+      <p style="margin-top:8px;"><a href="termos.html" target="_blank">Termos de Uso</a> · <a href="privacidade.html" target="_blank">Privacidade</a></p>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="viewTitle">Dashboard</h1>
+        <div class="sub" id="viewSub">Panorama geral das oportunidades em alta agora</div>
+      </div>
+      <button class="btn btn-primary" id="scanBtn"><i class="fa-solid fa-satellite-dish"></i>Scan de Tendências</button>
+    </div>
+
+    <!-- ===== PRIMEIROS PASSOS ===== -->
+    <section class="view" id="view-onboarding">
+      <div class="panel" id="onboardPanel"></div>
+    </section>
+
+    <!-- ===== PAYWALL (plano Básico tentando acessar Afiliados) ===== -->
+    <section class="view" id="view-paywall">
+      <div class="empty-state">
+        <i class="fa-solid fa-lock"></i>
+        <h3>Isso é do plano Full</h3>
+        <p>Marketing de Afiliados — catálogo, geração de conteúdo com IA, publicação e dashboard financeiro — é exclusivo de quem assina o plano Full. O plano Básico dá acesso livre à Pesquisa de Produtos.</p>
+        <button class="btn btn-primary" onclick="startCheckout()" style="margin-top:16px;">Assinar Full</button>
+      </div>
+    </section>
+
+    <!-- ===== DASHBOARD ===== -->
+    <section class="view active" id="view-dashboard">
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div class="section-head"><h2>Top 6 tendências agora</h2><span class="link">ver todos os <span id="allProdutosCount">18</span> →</span></div>
+      <div class="trend-scroll" id="trendScroll"></div>
+
+      <div class="charts-row">
+        <div class="panel">
+          <div class="panel-head"><h3>Evolução de buscas — Top 5 (8 semanas)</h3><span class="tag">GOOGLE TRENDS SIM.</span></div>
+          <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Distribuição por categoria</h3><span class="tag">18 PRODUTOS</span></div>
+          <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="section-head"><h2>Ranking de oportunidade</h2><span class="tag" style="font-family:var(--font-mono);font-size:10px;color:var(--text-faint);">ORDENADO POR SCORE</span></div>
+      <div class="panel table-wrap">
+        <table>
+          <thead><tr>
+            <th></th><th>Produto</th><th>Score</th><th>Margem</th><th>Concorrência</th><th>Tendência</th><th>Buscas/mês</th><th></th>
+          </tr></thead>
+          <tbody id="rankBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== PRODUTOS ===== -->
+    <section class="view" id="view-produtos">
+      <div class="filter-bar">
+        <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="searchInput" placeholder="Buscar produto, categoria ou tag..."></div>
+        <select id="catFilter"><option value="">Todas categorias</option></select>
+        <select id="scoreFilter">
+          <option value="0">Score mínimo: qualquer</option>
+          <option value="90">Score ≥ 90</option>
+          <option value="80">Score ≥ 80</option>
+          <option value="70">Score ≥ 70</option>
+        </select>
+        <select id="compFilter">
+          <option value="">Qualquer concorrência</option>
+          <option value="Baixa">Baixa</option>
+          <option value="Média">Média</option>
+          <option value="Alta">Alta</option>
+        </select>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </section>
+
+    <!-- ===== NICHOS ===== -->
+    <section class="view" id="view-nichos">
+      <div class="niche-grid" id="nicheGrid"></div>
+    </section>
+
+    <!-- ===== WATCHLIST ===== -->
+    <section class="view" id="view-watchlist">
+      <div class="panel table-wrap" id="watchTableWrap" style="display:none;">
+        <table>
+          <thead><tr><th></th><th>Produto</th><th>Score</th><th>Margem</th><th>Preço sugerido</th><th>Tendência</th><th></th></tr></thead>
+          <tbody id="watchBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="watchEmpty">
+        <i class="fa-regular fa-star"></i>
+        <h3>Sua watchlist está vazia</h3>
+        <p>Clique na estrela de qualquer produto no Dashboard ou em Produtos para monitorá-lo aqui.</p>
+      </div>
+    </section>
+
+    <!-- ===== DASHBOARD FINANCEIRO (Afiliados) ===== -->
+    <section class="view" id="view-fin-dashboard">
+      <div class="kpi-grid" id="finKpiGrid"></div>
+      <div class="panel" style="margin-top:24px;">
+        <div class="panel-head"><h3>Evolução de receita</h3><span class="tag">REAL</span></div>
+        <div class="chart-wrap" style="height:250px;"><canvas id="revenueChart"></canvas></div>
+      </div>
+      <div class="charts-row-even" style="margin-top:14px;">
+        <div class="panel">
+          <div class="panel-head"><h3>Feed de operação</h3><span class="tag">AO VIVO</span></div>
+          <div class="log-feed" id="logFeed"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Receita por plataforma</h3><span class="tag">ATUAL</span></div>
+          <div class="forecast-list" id="forecastList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== HUB DE AFILIAÇÕES ===== -->
+    <section class="view" id="view-aff-hub">
+      <div class="aff-grid" id="affGrid"></div>
+    </section>
+
+    <!-- ===== CONTAS CONECTADAS ===== -->
+    <section class="view" id="view-contas">
+      <div class="conn-grid" id="connGrid"></div>
+    </section>
+
+    <!-- ===== CATÁLOGO DINÂMICO ===== -->
+    <section class="view" id="view-catalogo">
+      <div class="view-tabs" id="catalogTabs">
+        <button class="view-tab active" data-ctab="produtos" type="button">Produtos ativos</button>
+        <button class="view-tab" data-ctab="fila" type="button">Fila de limpeza<span class="nav-count" id="queueCount">0</span></button>
+      </div>
+
+      <div id="catalogTabProdutos">
+        <div class="filter-bar">
+          <button class="btn btn-primary" type="button" onclick="openAddProductModal()"><i class="fa-solid fa-plus"></i>Adicionar produto</button>
+          <select id="catPlatFilter"><option value="">Todas plataformas</option></select>
+          <select id="catFaseFilter">
+            <option value="">Todas as fases</option>
+            <option value="Fase 1">Fase 1</option>
+            <option value="Fase 2">Fase 2</option>
+          </select>
+          <select id="catMarginFilter">
+            <option value="0">Margem mínima: qualquer</option>
+            <option value="10">Margem ≥ 10%</option>
+            <option value="20">Margem ≥ 20%</option>
+            <option value="30">Margem ≥ 30%</option>
+          </select>
+          <select id="catMomentumFilter">
+            <option value="">Qualquer momentum</option>
+            <option value="alta">Alta</option>
+            <option value="media">Média</option>
+            <option value="baixa">Baixa</option>
+            <option value="negativa">Negativa</option>
+          </select>
+        </div>
+        <div class="panel table-wrap">
+          <table>
+            <thead><tr><th>Produto</th><th>Plataforma</th><th>Fase</th><th>Margem</th><th>Cliques 7d</th><th>Receita</th><th>Momentum</th><th></th></tr></thead>
+            <tbody id="catalogBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="catalogTabFila" style="display:none;">
+        <div class="catalog-info"><strong style="color:var(--text);">Como a auto-limpeza decide:</strong> um produto entra nesta fila quando fica 7 ou mais dias com cliques 40% abaixo da própria média, ou 14 dias seguidos sem nenhuma venda. Nada é removido sozinho — cada item espera sua confirmação.</div>
+        <div id="cleanupList"></div>
+      </div>
+    </section>
+
+    <!-- ===== GERAÇÃO DE CONTEÚDO COM IA ===== -->
+    <section class="view" id="view-geracao">
+      <div class="panel">
+        <div class="panel-head"><h3>Gerar bundle de conteúdo</h3><span class="tag">IA REAL</span></div>
+        <div class="gen-picker">
+          <select id="genProductSelect"></select>
+          <button class="btn btn-primary" id="genBtn" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i>Gerar conteúdo</button>
+        </div>
+        <div class="gen-status" id="genStatus"></div>
+      </div>
+
+      <div id="genEmpty" class="empty-state">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <h3>Nenhum conteúdo gerado ainda</h3>
+        <p>Escolha um produto acima e clique em gerar — isso chama uma IA de verdade pra criar hooks, copy, artigo SEO e roteiro em PT e EN.</p>
+      </div>
+
+      <div id="genResults" style="display:none;">
+        <div class="section-head"><h2>Hooks gerados</h2></div>
+        <div class="hooks-grid" id="hooksGrid"></div>
+
+        <div class="section-head"><h2>Bundle de conteúdo</h2></div>
+        <div class="view-tabs" id="genLangTabs">
+          <button class="lang-tab active" data-lang="pt" type="button">Português</button>
+          <button class="lang-tab" data-lang="en" type="button">English</button>
+        </div>
+        <div class="content-bundle" id="contentBundle"></div>
+      </div>
+    </section>
+
+    <!-- ===== REVISÃO DE CONTEÚDO ===== -->
+    <section class="view" id="view-revisao">
+      <div class="review-bulk-bar" id="reviewBulkBar">
+        <label><input type="checkbox" id="reviewSelectAll">Selecionar todos</label>
+        <button class="btn" id="bulkApproveBtn" type="button" disabled>Aprovar selecionados</button>
+      </div>
+      <div id="reviewList"></div>
+      <div class="panel" id="reviewEditor" style="display:none;margin-top:20px;"></div>
+    </section>
+
+    <!-- ===== CENTRO DE COMANDO IA ===== -->
+    <section class="view" id="view-comando">
+      <div class="panel">
+        <div class="cmd-master">
+          <div>
+            <div class="cmd-master-title">Autonomia da operação</div>
+            <div class="cmd-master-sub">Quando ligado, o sistema publica sugestões automaticamente sem esperar sua aprovação manual em cada bundle.</div>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="autonomyToggle"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="cmd-rules">
+          <label>Sugestões por dia<input type="number" id="cmdSuggestions" min="1" max="20" value="5"></label>
+          <label>Janela para remoção (dias)<input type="number" id="cmdWindow" min="1" max="30" value="7"></label>
+        </div>
+        <label class="cmd-check"><input type="checkbox" id="cmdStrict"><span>Regra estrita de sinalização — exige 2 sinais negativos antes de entrar na fila de limpeza, não só 1</span></label>
+        <button class="btn btn-primary" id="cmdSaveBtn" type="button" style="margin-top:16px;"><i class="fa-solid fa-floppy-disk"></i>Salvar regras</button>
+      </div>
+
+      <div class="section-head"><h2>Resumo instantâneo</h2></div>
+      <div class="kpi-grid" id="cmdSummary"></div>
+
+      <div class="charts-row-even" style="margin-top:20px;">
+        <div class="panel">
+          <div class="panel-head"><h3>Bundles gerados recentemente</h3></div>
+          <div id="cmdRecentBundles" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Melhor hook do momento</h3></div>
+          <div id="cmdBestHook"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL DE DETALHES -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- SCAN OVERLAY -->
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-box">
+    <div class="scan-radar"></div>
+    <div class="scan-title">Escaneando o mercado...</div>
+    <div class="scan-sub">Cruzando sinais de demanda, concorrência e sazonalidade</div>
+    <div class="scan-bar-track"><div class="scan-bar-fill" id="scanBarFill"></div></div>
+    <div class="scan-log" id="scanLog"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastText"></span></div>
+
+<script>
+/* =========================================================
+   DADOS
+========================================================= */
+let PRODUCTS = [];
+async function loadProducts(){
+  PRODUCTS = await apiFetch("/products");
+}
+
+function updateProdutosNavCount(){
+  const a = document.getElementById("produtosNavCount");
+  const b = document.getElementById("allProdutosCount");
+  if(a) a.textContent = PRODUCTS.length;
+  if(b) b.textContent = PRODUCTS.length;
+}
+
+let NICHES = [];
+async function loadNiches(){
+  NICHES = await apiFetch("/niches");
+}
+
+const SOURCES = [
+  {name:"Google Trends",icon:"fa-brands fa-google"},
+  {name:"AliExpress",icon:"fa-brands fa-alipay"},
+  {name:"Shopee",icon:"fa-solid fa-bag-shopping"},
+  {name:"Amazon",icon:"fa-brands fa-amazon"},
+  {name:"TikTok",icon:"fa-brands fa-tiktok"},
+];
+
+/* =========================================================
+   ESTADO
+========================================================= */
+let watchlist = [];
+let lineChartInstance = null;
+let donutChartInstance = null;
+
+function compBadgeClass(c){return c==="Baixa"?"baixa":c==="Média"?"media":"alta";}
+function ringColor(score){return score>=85?"var(--green)":score>=70?"var(--amber)":"var(--coral)";}
+function trendClass(t){return t==="up"?"trend-up":t==="down"?"trend-down":"trend-stable";}
+function trendIcon(t){return t==="up"?"fa-arrow-trend-up":t==="down"?"fa-arrow-trend-down":"fa-minus";}
+function money(n){return "R$ "+n.toFixed(0);}
+
+function scoreRing(score,size){
+  const cls = size?` ${size}`:"";
+  return `<div class="score-ring${cls}" style="--sc:${score};--ring-c:${ringColor(score)}"><span>${score}</span></div>`;
+}
+function thumbHtml(p,cls){
+  if(p.image){
+    return `<div class="${cls}"><img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.parentElement.classList.add('emoji-only');this.parentElement.innerHTML='<span class=\\'emoji-fb\\'>${p.emoji}</span>';"></div>`;
+  }
+  return `<div class="${cls} emoji-only"><span class="emoji-fb">${p.emoji}</span></div>`;
+}
+
+/* =========================================================
+   PERSISTÊNCIA (API real, por loja)
+========================================================= */
+async function loadWatchlist(){
+  try{
+    watchlist = await apiFetch("/watchlist");
+  }catch(e){
+    watchlist = [];
+  }
+  updateWatchCount();
+}
+function updateWatchCount(){
+  document.getElementById("watchCount").textContent = watchlist.length;
+}
+async function toggleWatch(id, ev){
+  if(ev) ev.stopPropagation();
+  const idx = watchlist.indexOf(id);
+  try{
+    if(idx>-1){
+      await apiFetch(`/watchlist/${id}`, { method:"DELETE" });
+      watchlist.splice(idx,1);
+      showToast("Removido da watchlist");
+    }else{
+      await apiFetch("/watchlist", { method:"POST", body: JSON.stringify({product_id:id}) });
+      watchlist.push(id);
+      showToast("Adicionado à watchlist");
+    }
+  }catch(e){
+    showToast("Não foi possível atualizar a watchlist");
+    return;
+  }
+  updateWatchCount();
+  renderAll();
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  document.getElementById("toastText").textContent=msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),2400);
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+========================================================= */
+const viewMeta = {
+  onboarding:{title:"Primeiros Passos",sub:"Seu guia pra deixar a operação de afiliados rodando"},
+  dashboard:{title:"Dashboard",sub:"Panorama geral das oportunidades em alta agora"},
+  produtos:{title:"Produtos",sub:"Catálogo completo com filtros de score, categoria e concorrência"},
+  nichos:{title:"Análise de Nichos",sub:"Mercado, margem e crescimento por categoria"},
+  watchlist:{title:"Watchlist",sub:"Produtos que você está monitorando de perto"},
+  "fin-dashboard":{title:"Dashboard Financeiro",sub:"Receita, operação e forecast por plataforma de afiliados"},
+  "aff-hub":{title:"Hub de Afiliações",sub:"Suas contas em cada plataforma de afiliados"},
+  "contas":{title:"Contas Conectadas",sub:"Integrações sociais para publicação automática"},
+  "catalogo":{title:"Catálogo Dinâmico",sub:"Produtos ativos e fila de auto-limpeza"},
+  "geracao":{title:"Geração de Conteúdo",sub:"Hooks, copy, artigo SEO e roteiro gerados por IA"},
+  "revisao":{title:"Revisão de Conteúdo",sub:"Aprove, edite ou copie os bundles gerados antes de publicar"},
+  "comando":{title:"Centro de Comando IA",sub:"Autonomia, regras e resumo da operação"},
+};
+document.querySelectorAll(".nav-item").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    const view = btn.dataset.view;
+    document.getElementById("view-"+view).classList.add("active");
+    document.getElementById("viewTitle").textContent = viewMeta[view].title;
+    document.getElementById("viewSub").textContent = viewMeta[view].sub;
+    if(view==="onboarding") renderOnboarding();
+    if(view==="fin-dashboard") renderFinDashboard();
+    if(view==="aff-hub") renderAffHub();
+    if(view==="contas") renderContas();
+    if(view==="catalogo") renderCatalogView();
+    if(view==="geracao") populateGenPicker();
+    if(view==="revisao"){ renderReviewList(); renderReviewEditor(); }
+    if(view==="comando") renderCommandCenter();
+  });
+});
+document.querySelectorAll(".view-tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".view-tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("catalogTabProdutos").style.display = t.dataset.ctab==="produtos" ? "block":"none";
+    document.getElementById("catalogTabFila").style.display = t.dataset.ctab==="fila" ? "block":"none";
+  });
+});
+
+/* =========================================================
+   MÓDULOS (Pesquisa de Produtos vs Marketing de Afiliados)
+========================================================= */
+let activeModule = "dropship";
+document.querySelectorAll(".module-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(btn.dataset.module===activeModule) return;
+    activeModule = btn.dataset.module;
+    document.querySelectorAll(".module-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("navDropship").style.display = activeModule==="dropship" ? "flex":"none";
+    document.getElementById("navAfiliados").style.display = activeModule==="afiliados" ? "flex":"none";
+    document.getElementById("scanBtn").style.display = activeModule==="dropship" ? "inline-flex":"none";
+    if(activeModule==="afiliados" && currentUser.plan!=="full"){
+      document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+      document.getElementById("view-paywall").classList.add("active");
+      document.getElementById("viewTitle").textContent = "Marketing de Afiliados";
+      document.getElementById("viewSub").textContent = "Recurso do plano Full";
+      return;
+    }
+    const firstNav = document.querySelector(activeModule==="dropship" ? "#navDropship .nav-item" : "#navAfiliados .nav-item");
+    if(firstNav) firstNav.click();
+  });
+});
+
+/* =========================================================
+   AUTENTICAÇÃO (API real)
+========================================================= */
+const API_BASE = "http://localhost:8000/api";
+const ONBOARD_KEY = "trenddrop_onboarding_seen";
+let currentUser = null;
+
+async function apiFetch(path, options = {}){
+  const res = await fetch(`${API_BASE}${path}`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  let body = null;
+  try{ body = await res.json(); }catch(e){ body = null; }
+  if(!res.ok){
+    const msg = (body && body.detail) ? body.detail : "Algo deu errado. Tente novamente.";
+    throw new Error(msg);
+  }
+  return body;
+}
+async function loadAuth(){
+  try{
+    currentUser = await apiFetch("/auth/me");
+  }catch(e){ currentUser = null; }
+}
+async function clearAuth(){
+  currentUser = null;
+  try{ await apiFetch("/auth/logout", { method: "POST" }); }catch(e){}
+}
+function showAuthScreen(){
+  document.getElementById("authScreen").style.display="flex";
+  document.getElementById("appRoot").style.display="none";
+}
+function showApp(){
+  document.getElementById("authScreen").style.display="none";
+  document.getElementById("appRoot").style.display="flex";
+}
+function updateUserUI(){
+  if(!currentUser) return;
+  document.getElementById("userAvatar").textContent = (currentUser.nome||"U").charAt(0).toUpperCase();
+  document.getElementById("userName").textContent = currentUser.nome||"Usuário";
+  document.getElementById("userLoja").textContent = currentUser.loja||"";
+  updatePlanChip();
+}
+function updatePlanChip(){
+  if(!currentUser) return;
+  const isFull = currentUser.plan==="full";
+  const chip = document.getElementById("planChip");
+  const label = document.getElementById("planChipLabel");
+  const btn = document.getElementById("planChipBtn");
+  chip.classList.toggle("full", isFull);
+  label.innerHTML = isFull ? '<i class="fa-solid fa-circle-check"></i> Plano Full' : "Plano Básico";
+  btn.textContent = isFull ? "Gerenciar assinatura" : "Assinar Full";
+  btn.onclick = isFull ? openBillingPortal : startCheckout;
+}
+async function startCheckout(){
+  try{
+    const { url } = await apiFetch("/billing/checkout", { method:"POST" });
+    window.location.href = url;
+  }catch(e){ showToast(e.message); }
+}
+async function openBillingPortal(){
+  try{
+    const { url } = await apiFetch("/billing/portal", { method:"POST" });
+    window.location.href = url;
+  }catch(e){ showToast(e.message); }
+}
+document.querySelectorAll(".auth-tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".auth-tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("loginForm").style.display = t.dataset.tab==="login" ? "flex":"none";
+    document.getElementById("cadastroForm").style.display = t.dataset.tab==="cadastro" ? "flex":"none";
+  });
+});
+document.getElementById("loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const senha = document.getElementById("loginPassword").value;
+  const err = document.getElementById("loginError");
+  if(!email || !senha){ err.textContent = "Preencha e-mail e senha."; return; }
+  err.textContent = "";
+  try{
+    currentUser = await apiFetch("/auth/login", { method:"POST", body: JSON.stringify({email, senha}) });
+    await afterLogin();
+  }catch(e){ err.textContent = e.message; }
+});
+document.getElementById("cadTerms").addEventListener("change", e=>{
+  document.getElementById("cadSubmitBtn").disabled = !e.target.checked;
+});
+document.getElementById("cadastroForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const loja = document.getElementById("cadLoja").value.trim();
+  const nome = document.getElementById("cadNome").value.trim();
+  const email = document.getElementById("cadEmail").value.trim();
+  const senha = document.getElementById("cadSenha").value;
+  const termsAccepted = document.getElementById("cadTerms").checked;
+  const err = document.getElementById("cadError");
+  if(!loja || !nome || !email || !senha){ err.textContent = "Preencha todos os campos."; return; }
+  if(senha.length < 8){ err.textContent = "A senha precisa ter pelo menos 8 caracteres."; return; }
+  if(!termsAccepted){ err.textContent = "É preciso aceitar os Termos de Uso e a Política de Privacidade."; return; }
+  err.textContent = "";
+  try{
+    currentUser = await apiFetch("/auth/signup", { method:"POST", body: JSON.stringify({loja, nome, email, senha, terms_accepted: termsAccepted}) });
+    await afterLogin();
+  }catch(e){ err.textContent = e.message; }
+});
+document.getElementById("googleLoginBtn").addEventListener("click", ()=>{
+  window.location.href = `${API_BASE}/auth/google/login`;
+});
+document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+  await clearAuth();
+  showAuthScreen();
+});
+async function bootstrapAuthenticatedApp(){
+  await loadProducts();
+  await loadNiches();
+  updateProdutosNavCount();
+  populateCatFilter();
+  await loadWatchlist();
+  renderAll();
+  await loadAffPlatforms();
+  await loadConnStatus();
+  await loadCatalogProducts();
+  await loadRemovalQueue();
+  renderCleanupQueue();
+  await loadReviewQueue();
+  updateReviewBadge();
+  await loadCommandSettings();
+  await loadOnboardingStatus();
+}
+let firstTimeTour = false;
+async function afterLogin(){
+  showApp();
+  updateUserUI();
+  await bootstrapAuthenticatedApp();
+  let onboardSeen = false;
+  try{
+    const res = await window.storage.get(ONBOARD_KEY, false);
+    onboardSeen = res && res.value === "1";
+  }catch(e){ onboardSeen = false; }
+  if(!onboardSeen){ firstTimeTour = true; startTour(); }
+}
+
+/* =========================================================
+   TOUR / ONBOARDING
+========================================================= */
+const TOUR_STEPS = [
+  {icon:"fa-handshake",title:"O que é marketing de afiliados",text:"Você promove produtos de outras empresas e ganha comissão por cada venda gerada pelo seu link. Sem estoque, sem logística — só tráfego e conteúdo bem direcionados."},
+  {icon:"fa-compass",title:"Como navegar pelo app",text:"O menu lateral tem dois módulos: Pesquisa de Produtos, para achar o que vender, e Marketing de Afiliados, para gerir sua operação. Troque entre eles quando quiser."},
+  {icon:"fa-layer-group",title:"Fase 1 e Fase 2 da operação",text:"Fase 1 é teste: você publica conteúdo e observa os resultados. Fase 2 é escala: produtos validados recebem mais publicações e mais investimento de tempo."},
+  {icon:"fa-broom",title:"Como funciona a auto-limpeza",text:"O sistema sinaliza produtos com performance fraca depois de alguns dias abaixo da meta. Ele nunca remove nada sozinho — você sempre confirma antes."},
+  {icon:"fa-seedling",title:"Nunca fez isso antes? Sem problema",text:"Cada tela tem um jeito guiado de começar, mesmo sem experiência prévia com afiliados. Você pode reabrir este tour quando quiser pelo menu lateral."},
+];
+let tourStep = 0;
+function startTour(){
+  tourStep = 0;
+  renderTourStep();
+  document.getElementById("tourOverlay").classList.add("open");
+}
+function renderTourStep(){
+  const s = TOUR_STEPS[tourStep];
+  document.getElementById("tourIcon").innerHTML = `<i class="fa-solid ${s.icon}"></i>`;
+  document.getElementById("tourTitle").textContent = s.title;
+  document.getElementById("tourText").textContent = s.text;
+  document.getElementById("tourProgress").innerHTML = TOUR_STEPS.map((_,i)=>`<span class="${i<=tourStep?'done':''}"></span>`).join("");
+  document.getElementById("tourNext").textContent = tourStep===TOUR_STEPS.length-1 ? "Começar" : "Próximo";
+}
+async function finishTour(){
+  document.getElementById("tourOverlay").classList.remove("open");
+  try{ await window.storage.set(ONBOARD_KEY, "1", false); }catch(e){}
+  if(firstTimeTour){
+    firstTimeTour = false;
+    const onboardingNav = document.querySelector('[data-view="onboarding"]');
+    if(onboardingNav) onboardingNav.click();
+  }
+}
+document.getElementById("tourNext").addEventListener("click", async ()=>{
+  if(tourStep < TOUR_STEPS.length-1){ tourStep++; renderTourStep(); }
+  else{ await finishTour(); }
+});
+document.getElementById("tourSkip").addEventListener("click", finishTour);
+document.getElementById("tourBtn").addEventListener("click", startTour);
+
+/* =========================================================
+   PRIMEIROS PASSOS
+========================================================= */
+// Links normais (não são de afiliado ainda) — trocar pela URL de indicação assim que a conta de parceiro for criada em cada plataforma.
+const STORE_RESOURCES = [
+  {name:"Shopify", url:"https://www.shopify.com", description:"A plataforma mais usada no mundo pra montar loja de dropshipping. Grátis pra testar."},
+  {name:"Wix", url:"https://www.wix.com", description:"Construtor de site mais simples, bom pra quem quer algo rápido pra começar a vender."},
+];
+const ONBOARD_FOCUS_KEY = "trenddrop_onboarding_focus";
+const ONBOARD_FOCUS_LABELS = {pesquisa:"Pesquisa de Produtos", afiliados:"Marketing de Afiliados", ambos:"Os dois"};
+let ONBOARDING_DATA = null;
+let onboardingFocus = "ambos";
+
+function focusedOnboardingSteps(){
+  if(!ONBOARDING_DATA) return [];
+  return onboardingFocus==="ambos" ? ONBOARDING_DATA.steps : ONBOARDING_DATA.steps.filter(s=>s.module===onboardingFocus);
+}
+function updateOnboardBadge(){
+  const steps = focusedOnboardingSteps();
+  document.getElementById("onboardNavCount").textContent = `${steps.filter(s=>s.done).length}/${steps.length}`;
+}
+async function loadOnboardingStatus(){
+  ONBOARDING_DATA = await apiFetch("/onboarding/status");
+  try{
+    const res = await window.storage.get(ONBOARD_FOCUS_KEY, false);
+    onboardingFocus = (res && res.value) || "ambos";
+  }catch(e){ onboardingFocus = "ambos"; }
+  updateOnboardBadge();
+}
+async function setOnboardingFocus(focus){
+  onboardingFocus = focus;
+  try{ await window.storage.set(ONBOARD_FOCUS_KEY, focus, false); }catch(e){}
+  updateOnboardBadge();
+  renderOnboardingBody();
+}
+function renderOnboardingBody(){
+  const steps = focusedOnboardingSteps();
+  const completed = steps.filter(s=>s.done).length;
+  const total = steps.length;
+  const tabsHtml = `<div class="onboard-focus-tabs">${["pesquisa","afiliados","ambos"].map(f=>`<button type="button" class="onboard-focus-tab ${onboardingFocus===f?'active':''}" onclick='setOnboardingFocus("${f}")'>${ONBOARD_FOCUS_LABELS[f]}</button>`).join("")}</div>`;
+  const doneMessage = onboardingFocus==="pesquisa"
+    ? "<strong>Você já sabe pesquisar produtos em alta.</strong> Quando quiser começar a vender como afiliado, é só trocar o foco aqui pra \"Marketing de Afiliados\"."
+    : "<strong>Tudo pronto!</strong> Produto no catálogo, conteúdo aprovado e conta social conectada. Agora é publicar e divulgar — acompanhe os resultados no Dashboard Financeiro.";
+  const banner = total>0 && completed===total ? `
+    <div class="onboard-done-banner">
+      <i class="fa-solid fa-circle-check"></i>
+      <p>${doneMessage}</p>
+    </div>` : "";
+  const stepsHtml = steps.map(s=>`
+    <div class="onboard-step ${s.done?'done':''}">
+      <div class="onboard-check"><i class="fa-solid ${s.done?'fa-check':'fa-circle'}"></i></div>
+      <div class="onboard-body"><h4>${s.title}</h4><p>${s.description}</p></div>
+      ${s.done ? "" : `<button class="btn btn-primary" onclick='document.querySelector("[data-view=\\"${s.view}\\"]").click()'>Ir</button>`}
+    </div>`).join("");
+  const resourcesHtml = onboardingFocus!=="pesquisa" ? "" : `
+    <div class="onboard-resources">
+      <div class="onboard-resources-head">Já tem loja pra vender? Se não, aqui vão duas opções gratuitas pra começar:</div>
+      <div class="onboard-resource-grid">
+        ${STORE_RESOURCES.map(r=>`
+          <div class="onboard-resource-card">
+            <h4>${r.name}</h4>
+            <p>${r.description}</p>
+            <a class="btn btn-primary" href="${r.url}" target="_blank" rel="noopener">Criar loja grátis</a>
+          </div>`).join("")}
+      </div>
+    </div>`;
+  document.getElementById("onboardPanel").innerHTML = `
+    ${tabsHtml}
+    <div class="onboard-progress-head"><h3>Seu progresso</h3><span>${completed}/${total} concluídos</span></div>
+    ${banner}
+    ${stepsHtml}
+    ${resourcesHtml}`;
+}
+async function renderOnboarding(){
+  await loadOnboardingStatus();
+  renderOnboardingBody();
+}
+
+/* =========================================================
+   DASHBOARD FINANCEIRO (Afiliados)
+========================================================= */
+let FIN_DATA = null;
+async function loadFinanceDashboard(){
+  FIN_DATA = await apiFetch("/finance/dashboard");
+}
+function logDotColor(type){return type==="aprovacao"?"var(--green)":type==="alerta"?"var(--coral)":type==="geracao"?"var(--amber)":"var(--teal)";}
+function renderLogFeed(){
+  document.getElementById("logFeed").innerHTML = FIN_DATA.recentActivity.map(l=>`
+    <div class="log-item">
+      <div class="log-dot" style="background:${logDotColor(l.type)}"></div>
+      <div class="lt"><div>${l.text}</div><div class="lm">${l.platform}</div></div>
+      <div class="ltime">${timeAgo(l.timestamp)}</div>
+    </div>`).join("");
+}
+function renderForecast(){
+  document.getElementById("forecastList").innerHTML = FIN_DATA.revenueByPlatform.map(f=>`
+    <div class="forecast-item">
+      <div class="forecast-top">
+        <div class="forecast-plat">${f.platform}</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="forecast-val">${money(f.revenue)}</span>
+        </div>
+      </div>
+    </div>`).join("");
+}
+function renderFinKPIs(){
+  const kpis = [
+    {icon:"fa-sack-dollar",color:"--green",soft:"--green-soft",label:"Receita total",value:money(FIN_DATA.totalRevenue),trend:"soma dos produtos ativos"},
+    {icon:"fa-layer-group",color:"--amber",soft:"--amber-soft",label:"Produtos em Fase 2",value:String(FIN_DATA.fase2Count),trend:"validados e escalando"},
+    {icon:"fa-bullhorn",color:"--teal",soft:"--teal-soft",label:"Bundles aprovados",value:String(FIN_DATA.approvedBundles),trend:"conteúdo pronto pra publicar"},
+    {icon:"fa-broom",color:"--coral",soft:"--coral-soft",label:"Remoções pendentes",value:String(FIN_DATA.pendingRemovals),trend:"aguardando confirmação"},
+  ];
+  document.getElementById("finKpiGrid").innerHTML = kpis.map(k=>`
+    <div class="kpi-card" style="--kpi-glow:var(${k.soft})">
+      <div class="kpi-top">
+        <div class="kpi-icon" style="--kpi-soft:var(${k.soft});--kpi-color:var(${k.color})"><i class="fa-solid ${k.icon}"></i></div>
+        <span class="kpi-trend">${k.trend}</span>
+      </div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+    </div>`).join("");
+}
+let revenueChartInstance = null;
+function buildRevenueChart(){
+  const labels = FIN_DATA.revenueHistory.map(p=>p.date);
+  const data = FIN_DATA.revenueHistory.map(p=>p.totalRevenue);
+  const ctx = document.getElementById("revenueChart");
+  if(revenueChartInstance) revenueChartInstance.destroy();
+  revenueChartInstance = new Chart(ctx,{
+    type:"line",
+    data:{labels,datasets:[{label:"Receita (R$)",data,borderColor:"#00E6A6",backgroundColor:"#00E6A622",tension:.35,pointRadius:0,borderWidth:2.5,fill:true}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:"#5B6478",font:{size:9},maxTicksLimit:8},grid:{display:false}},
+        y:{ticks:{color:"#5B6478",font:{size:10}},grid:{color:"#2A333F40"}}
+      }
+    }
+  });
+}
+async function renderFinDashboard(){
+  await loadFinanceDashboard();
+  renderFinKPIs();
+  renderLogFeed();
+  renderForecast();
+  buildRevenueChart();
+}
+
+/* =========================================================
+   HUB DE AFILIAÇÕES
+========================================================= */
+let AFF_PLATFORMS = [];
+async function loadAffPlatforms(){
+  AFF_PLATFORMS = await apiFetch("/affiliates");
+}
+function renderAffHub(){
+  document.getElementById("affGrid").innerHTML = AFF_PLATFORMS.map(p=>`
+    <div class="aff-card">
+      <div class="aff-top">
+        <div class="aff-icon-tile" style="background:${p.color}22;color:${p.color}">${p.icon?`<i class="${p.icon}"></i>`:p.monogram}</div>
+        <div>
+          <div class="aff-name">${p.name}</div>
+          <span class="status-pill ${p.connected?'ok':'off'}">${p.connected?'Conectado':'Não conectado'}</span>
+        </div>
+      </div>
+      <div class="aff-meta">
+        <div class="aff-meta-box"><div class="v">${p.fase}</div><div class="l">Fase</div></div>
+        <div class="aff-meta-box"><div class="v">${p.produtos}</div><div class="l">Produtos</div></div>
+        <div class="aff-meta-box"><div class="v">${p.receita}</div><div class="l">Receita</div></div>
+      </div>
+      <div class="aff-actions">
+        <button class="btn ${p.connected?'':'btn-primary'}" style="flex:1;justify-content:center;" onclick="openAffModal('${p.platform_id}')">${p.connected?'Gerenciar':'Conectar'}</button>
+      </div>
+      <a class="aff-link" href="${p.url}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i>Site oficial de afiliados</a>
+    </div>`).join("");
+}
+let affModalId = null, affModalStep = "root";
+function openAffModal(id){
+  affModalId = id;
+  affModalStep = "root";
+  renderAffModal();
+  document.getElementById("modalOverlay").classList.add("open");
+}
+function renderAffModal(){
+  const p = AFF_PLATFORMS.find(x=>x.platform_id===affModalId);
+  let body = "";
+  if(p.connected){
+    body = `
+      <div class="modal-grid-3">
+        <div class="mg-box"><div class="v">${p.fase}</div><div class="l">Fase atual</div></div>
+        <div class="mg-box"><div class="v">${p.produtos}</div><div class="l">Produtos ativos</div></div>
+        <div class="mg-box"><div class="v">${p.receita}</div><div class="l">Receita 30d</div></div>
+      </div>
+      <div class="modal-section"><p>Sua conta de afiliado nessa plataforma está conectada. Produtos publicados aqui aparecem no catálogo com o link de afiliado já aplicado.</p></div>
+      <div class="modal-actions">
+        <button class="btn" onclick="disconnectAff('${p.platform_id}')"><i class="fa-solid fa-link-slash"></i>Desconectar</button>
+        <a class="btn" href="${p.url}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i>Abrir painel oficial</a>
+      </div>`;
+  }else if(affModalStep==="no"){
+    body = `
+      <div class="modal-section"><p>Sem problema. Crie sua conta gratuita direto no site oficial da ${p.name} — geralmente leva alguns minutos e passa por uma aprovação da própria plataforma.</p></div>
+      <div class="modal-actions">
+        <a class="btn btn-primary" style="flex:1;justify-content:center;" href="${p.url}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i>Criar conta agora</a>
+        <button class="btn" style="flex:1;justify-content:center;" onclick="affModalStep='has';renderAffModal();">Já criei, quero conectar</button>
+      </div>`;
+  }else if(affModalStep==="has"){
+    body = `
+      <div class="modal-section"><p>Cole o link ou ID de afiliado da sua conta ${p.name} para conectar.</p></div>
+      <div class="auth-form" style="text-align:left;">
+        <label>Link ou ID de afiliado<input type="text" id="affInput" placeholder="ex: seunome-20 ou o link completo"></label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="connectAff('${p.platform_id}')"><i class="fa-solid fa-link"></i>Conectar agora</button>
+      </div>`;
+  }else{
+    body = `
+      <div class="modal-section"><p>Você já tem conta de afiliado na ${p.name}?</p></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="affModalStep='has';renderAffModal();">Já tenho conta</button>
+        <button class="btn" style="flex:1;justify-content:center;" onclick="affModalStep='no';renderAffModal();">Ainda não tenho</button>
+      </div>`;
+  }
+  document.getElementById("modalContent").innerHTML = `
+    <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-head">
+      <div class="aff-icon-tile" style="background:${p.color}22;color:${p.color}">${p.icon?`<i class="${p.icon}"></i>`:p.monogram}</div>
+      <div><h2>${p.name}</h2><div class="cat">${p.connected?'Conta conectada':'Assistente de conexão'}</div></div>
+    </div>
+    ${body}`;
+}
+async function connectAff(id){
+  const inputEl = document.getElementById("affInput");
+  const val = inputEl ? inputEl.value.trim() : "";
+  if(!val){ showToast("Cole o link ou ID de afiliado primeiro"); return; }
+  try{
+    const updated = await apiFetch(`/affiliates/${id}/connect`, { method:"POST", body: JSON.stringify({affiliate_id: val}) });
+    const idx = AFF_PLATFORMS.findIndex(x=>x.platform_id===id);
+    AFF_PLATFORMS[idx] = updated;
+    closeModal();
+    renderAffHub();
+    showToast(`${updated.name} conectado com sucesso`);
+  }catch(e){ showToast(e.message); }
+}
+async function disconnectAff(id){
+  try{
+    const updated = await apiFetch(`/affiliates/${id}/disconnect`, { method:"POST" });
+    const idx = AFF_PLATFORMS.findIndex(x=>x.platform_id===id);
+    AFF_PLATFORMS[idx] = updated;
+    closeModal();
+    renderAffHub();
+    showToast(`${updated.name} desconectado`);
+  }catch(e){ showToast(e.message); }
+}
+
+/* =========================================================
+   CONTAS CONECTADAS (Meta / TikTok)
+========================================================= */
+const CONN_APPS = [
+  {id:"meta",name:"Meta (Facebook + Instagram)",icons:["fa-brands fa-facebook","fa-brands fa-instagram"],color:"#0081FB",redirect:"http://localhost:8000/api/social/meta/callback",callback:"/api/social/meta/callback",scopes:["pages_show_list","pages_manage_posts","instagram_business_basic","instagram_business_content_publish"]},
+  {id:"tiktok",name:"TikTok",icons:["fa-brands fa-tiktok"],color:"#000000",redirect:"http://localhost:8000/api/social/tiktok/callback",callback:"/api/social/tiktok/callback",scopes:["user.info.basic"]},
+];
+const CONN_KEY = "trenddrop_social_conn"; // simulação local — só usada pra plataformas sem credenciais reais (hoje: TikTok)
+let CONN_STATUS = {};
+let SOCIAL_CONNECTIONS = [];
+async function loadConnStatus(){
+  try{
+    const res = await window.storage.get(CONN_KEY, false);
+    CONN_STATUS = res && res.value ? JSON.parse(res.value) : {};
+  }catch(e){ CONN_STATUS = {}; }
+  try{
+    SOCIAL_CONNECTIONS = await apiFetch("/social/connections");
+  }catch(e){ SOCIAL_CONNECTIONS = []; }
+}
+async function saveConnStatus(){
+  try{ await window.storage.set(CONN_KEY, JSON.stringify(CONN_STATUS), false); }catch(e){ console.error(e); }
+}
+function renderContas(){
+  document.getElementById("connGrid").innerHTML = CONN_APPS.map(a=>{
+    const real = SOCIAL_CONNECTIONS.find(c=>c.platform===a.id);
+    const configured = !!(real && real.configured);
+    const connected = configured ? real.connected : (CONN_STATUS[a.id]==="simulated");
+    const pill = !configured
+      ? (connected ? '<span class="status-pill ok">Conectado (simulado)</span>' : '<span class="status-pill warn">Aguardando credenciais</span>')
+      : (connected ? '<span class="status-pill ok">Conectado</span>' : '<span class="status-pill off">Não conectado</span>');
+    const pagesHtml = (configured && connected && real.pages.length)
+      ? `<div class="conn-row"><span class="k">Páginas</span><span class="v">${real.pages.map(p=>`${p.name}${p.has_instagram?' + Instagram':''}`).join(", ")}</span></div>`
+      : (configured && connected ? `<div class="conn-row"><span class="k">Páginas</span><span class="v">Nenhuma página encontrada nessa conta</span></div>` : "");
+    return `
+    <div class="conn-card">
+      <div class="conn-head">
+        <div class="conn-icons">${a.icons.map(ic=>`<i class="${ic}" style="color:${a.color}"></i>`).join("")}</div>
+        <div><div class="aff-name">${a.name}</div>${pill}</div>
+      </div>
+      <div class="conn-config">
+        <div class="conn-row"><span class="k">Redirect URI</span><span class="v">${a.redirect}</span></div>
+        <div class="conn-row"><span class="k">Callback</span><span class="v">${a.callback}</span></div>
+        <div class="conn-row"><span class="k">Escopos preparados</span><span class="v conn-scopes">${a.scopes.map(s=>`<span class="chip">${s}</span>`).join("")}</span></div>
+        <div class="conn-row"><span class="k">Secrets</span><span class="v">${configured?'<span class="status-pill ok">Configurados</span>':'<span class="status-pill off">Faltando</span>'}</span></div>
+        ${pagesHtml}
+      </div>
+      <div class="aff-actions">
+        ${connected
+          ? `<button class="btn" style="flex:1;justify-content:center;" onclick="disconnectSocial('${a.id}')"><i class="fa-solid fa-link-slash"></i>Desconectar</button>`
+          : (configured
+              ? `<a class="btn btn-primary" style="flex:1;justify-content:center;" href="${API_BASE}/social/${a.id}/connect"><i class="fa-solid fa-plug"></i>Conectar</a>`
+              : `<button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="openConnModal('${a.id}')"><i class="fa-solid fa-plug"></i>Conectar</button>`)}
+      </div>
+    </div>`;
+  }).join("");
+}
+function openConnModal(id){
+  const a = CONN_APPS.find(x=>x.id===id);
+  document.getElementById("modalContent").innerHTML = `
+    <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-head">
+      <div class="conn-icons">${a.icons.map(ic=>`<i class="${ic}" style="color:${a.color}"></i>`).join("")}</div>
+      <div><h2>${a.name}</h2><div class="cat">Conexão via OAuth</div></div>
+    </div>
+    <div class="modal-section"><p>Essa integração já está preparada no código — rotas, escopos e estrutura de callback — mas ainda depende das credenciais reais do Developer Console. Enquanto isso, a conexão de verdade não autentica.</p></div>
+    <div class="modal-section"><p>Você pode simular o fluxo agora pra ver como vai funcionar assim que as credenciais reais forem configuradas.</p></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" id="simulateConnBtn" onclick="simulateConnect('${a.id}')"><i class="fa-solid fa-play"></i>Simular conexão</button>
+    </div>`;
+  document.getElementById("modalOverlay").classList.add("open");
+}
+function simulateConnect(id){
+  const btn = document.getElementById("simulateConnBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Conectando...';
+  setTimeout(async ()=>{
+    CONN_STATUS[id] = "simulated";
+    await saveConnStatus();
+    closeModal();
+    renderContas();
+    showToast("Conexão simulada com sucesso");
+  },900);
+}
+async function disconnectSocial(id){
+  const real = SOCIAL_CONNECTIONS.find(c=>c.platform===id);
+  if(real && real.configured){
+    try{
+      await apiFetch(`/social/${id}/disconnect`, { method:"POST" });
+      await loadConnStatus();
+      renderContas();
+      showToast("Desconectado");
+    }catch(e){ showToast(e.message); }
+  }else{
+    CONN_STATUS[id] = "off";
+    await saveConnStatus();
+    renderContas();
+    showToast("Desconectado");
+  }
+}
+
+/* =========================================================
+   CATÁLOGO DINÂMICO + AUTO-LIMPEZA
+========================================================= */
+let AFF_PRODUCTS = [];
+let REMOVAL_QUEUE = [];
+function momentumLabel(m){ return {alta:"Alta",media:"Média",baixa:"Baixa",negativa:"Negativa"}[m] || m; }
+async function loadCatalogProducts(){
+  AFF_PRODUCTS = await apiFetch("/catalog/products");
+}
+async function loadRemovalQueue(){
+  REMOVAL_QUEUE = await apiFetch("/catalog/removal-queue");
+}
+function populateCatalogFilters(){
+  const plats = [...new Set(AFF_PRODUCTS.map(p=>p.platform))];
+  const sel = document.getElementById("catPlatFilter");
+  if(sel.options.length<=1){
+    sel.innerHTML = '<option value="">Todas plataformas</option>' + plats.map(p=>`<option value="${p}">${p}</option>`).join("");
+  }
+}
+const ADD_PRODUCT_PLATFORMS = ["Amazon","AliExpress","Shopee","Awin","Rakuten","Kiwify"];
+function openAddProductModal(){
+  document.getElementById("modalContent").innerHTML = `
+    <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-head"><div><h2>Adicionar produto</h2><div class="cat">Catálogo Dinâmico</div></div></div>
+    <div class="auth-form" style="text-align:left;">
+      <label>Nome do produto<input type="text" id="apName" placeholder="ex: Pistola de Massagem"></label>
+      <label>Emoji<input type="text" id="apEmoji" placeholder="📦" maxlength="4"></label>
+      <label>Plataforma<select id="apPlatform">${ADD_PRODUCT_PLATFORMS.map(p=>`<option value="${p}">${p}</option>`).join("")}</select></label>
+      <label>Categoria<input type="text" id="apCategory" placeholder="ex: Fitness"></label>
+      <label>Fase<select id="apFase"><option value="Fase 1">Fase 1</option><option value="Fase 2">Fase 2</option></select></label>
+      <label>Margem (%)<input type="number" id="apMargin" value="20" min="0" max="100"></label>
+      <label>Cliques (7 dias)<input type="number" id="apClicks" value="0" min="0"></label>
+      <label>Receita (R$)<input type="number" id="apRevenue" value="0" min="0"></label>
+      <label>Momentum<select id="apMomentum"><option value="alta">Alta</option><option value="media" selected>Média</option><option value="baixa">Baixa</option><option value="negativa">Negativa</option></select></label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="createCatalogProduct()"><i class="fa-solid fa-plus"></i>Adicionar</button>
+    </div>`;
+  document.getElementById("modalOverlay").classList.add("open");
+}
+async function createCatalogProduct(){
+  const name = document.getElementById("apName").value.trim();
+  if(!name){ showToast("Digite o nome do produto"); return; }
+  const payload = {
+    name,
+    emoji: document.getElementById("apEmoji").value.trim() || "📦",
+    platform: document.getElementById("apPlatform").value,
+    category: document.getElementById("apCategory").value.trim() || "Geral",
+    fase: document.getElementById("apFase").value,
+    margin: parseInt(document.getElementById("apMargin").value) || 0,
+    clicks: parseInt(document.getElementById("apClicks").value) || 0,
+    revenue: parseFloat(document.getElementById("apRevenue").value) || 0,
+    momentum: document.getElementById("apMomentum").value,
+  };
+  try{
+    await apiFetch("/catalog/products", { method:"POST", body: JSON.stringify(payload) });
+    await loadCatalogProducts();
+    closeModal();
+    populateCatalogFilters();
+    renderCatalogProducts();
+    showToast(`${name} adicionado ao catálogo`);
+  }catch(e){ showToast(e.message); }
+}
+function renderCatalogProducts(){
+  const plat = document.getElementById("catPlatFilter").value;
+  const fase = document.getElementById("catFaseFilter").value;
+  const minMargin = parseInt(document.getElementById("catMarginFilter").value);
+  const momentum = document.getElementById("catMomentumFilter").value;
+  const rows = AFF_PRODUCTS.filter(p => p.status!=="removido" &&
+    (!plat || p.platform===plat) &&
+    (!fase || p.fase===fase) &&
+    p.margin>=minMargin &&
+    (!momentum || p.momentum===momentum)
+  );
+  document.getElementById("catalogBody").innerHTML = rows.length ? rows.map(p=>`
+    <tr>
+      <td><div class="prod-cell">${thumbHtml(p,'prod-thumb')}<div><div class="nm">${p.name}</div><div class="ct">${p.category}</div></div></div></td>
+      <td>${p.platform}</td>
+      <td>${p.fase}</td>
+      <td style="font-family:var(--font-mono);">${p.margin}%</td>
+      <td style="font-family:var(--font-mono);">${p.clicks}</td>
+      <td style="font-family:var(--font-mono);color:var(--green);">${money(p.revenue)}</td>
+      <td><span class="badge mom-${p.momentum}">${momentumLabel(p.momentum)}</span></td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="icon-btn" title="Gerar conteúdo" onclick="goGenerateContent(${p.id})"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+        <button class="icon-btn" title="Marcar para revisão" onclick="flagForRemoval(${p.id})"><i class="fa-solid fa-flag"></i></button>
+      </div></td>
+    </tr>`).join("") : `<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:30px;">Nenhum produto encontrado com esses filtros.</td></tr>`;
+}
+function goGenerateContent(id){
+  document.querySelector('.nav-item[data-view="geracao"]').click();
+  const sel = document.getElementById("genProductSelect");
+  if(sel) sel.value = String(id);
+}
+
+/* =========================================================
+   GERAÇÃO DE CONTEÚDO COM IA (real) + HOOKS COM RANKING
+========================================================= */
+function populateGenPicker(){
+  const sel = document.getElementById("genProductSelect");
+  const prevVal = sel.value;
+  sel.innerHTML = AFF_PRODUCTS.filter(p=>p.status!=="removido").map(p=>`<option value="${p.id}">${p.emoji} ${p.name} — ${p.platform}</option>`).join("");
+  if([...sel.options].some(o=>o.value===prevVal)) sel.value = prevVal;
+}
+const GEN_STATUS_STEPS = ["Analisando o produto...","Estudando ângulos de venda...","Escrevendo os 3 hooks...","Gerando copy e roteiro...","Traduzindo para o inglês...","Finalizando bundle..."];
+let genStatusTimer = null;
+function startGenStatus(){
+  const el = document.getElementById("genStatus");
+  el.style.display = "flex";
+  let i = 0;
+  el.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>${GEN_STATUS_STEPS[0]}</span>`;
+  genStatusTimer = setInterval(()=>{
+    i = (i+1) % GEN_STATUS_STEPS.length;
+    el.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>${GEN_STATUS_STEPS[i]}</span>`;
+  }, 1100);
+}
+function stopGenStatus(finalText, isError){
+  clearInterval(genStatusTimer);
+  const el = document.getElementById("genStatus");
+  if(finalText){
+    el.innerHTML = `<i class="fa-solid ${isError?'fa-triangle-exclamation':'fa-circle-check'}" style="color:${isError?'var(--coral)':'var(--green)'}"></i><span>${finalText}</span>`;
+    setTimeout(()=>{ el.style.display = "none"; }, 2600);
+  }else{
+    el.style.display = "none";
+  }
+}
+async function generateContentBundle(){
+  const sel = document.getElementById("genProductSelect");
+  const id = parseInt(sel.value);
+  const p = AFF_PRODUCTS.find(x=>x.id===id) || AFF_PRODUCTS[0];
+  if(!p) return;
+  const btn = document.getElementById("genBtn");
+  btn.disabled = true;
+  document.getElementById("genEmpty").style.display = "none";
+  document.getElementById("genResults").style.display = "none";
+  startGenStatus();
+
+  try{
+    const bundle = await apiFetch("/content/generate", { method:"POST", body: JSON.stringify({product_id:p.id}) });
+    renderGenResults(p, {hooks: bundle.hooks, content: bundle.content});
+    await loadReviewQueue();
+    updateReviewBadge();
+    stopGenStatus("Conteúdo gerado com sucesso", false);
+  }catch(e){
+    console.error(e);
+    stopGenStatus("Não deu pra gerar agora — tenta de novo em instantes", true);
+    document.getElementById("genEmpty").style.display = "flex";
+  }finally{
+    btn.disabled = false;
+  }
+}
+document.getElementById("genBtn").addEventListener("click", generateContentBundle);
+
+let lastGenData = null, genLang = "pt";
+function renderGenResults(product, data){
+  lastGenData = data;
+  document.getElementById("genResults").style.display = "block";
+  const hooks = [...(data.hooks||[])].sort((a,b)=>b.score-a.score);
+  document.getElementById("hooksGrid").innerHTML = hooks.map((h,i)=>`
+    <div class="hook-card ${i===0?'best':''}">
+      ${i===0?'<span class="hook-best-badge">Melhor hook</span>':''}
+      <div class="hook-score"><span class="forecast-val">Score ${h.score}</span></div>
+      <div class="hook-text">${h.pt}</div>
+      <div class="hook-text en">${h.en}</div>
+      <div class="hook-motivo">${h.motivo}</div>
+    </div>`).join("");
+  genLang = "pt";
+  document.querySelectorAll(".lang-tab").forEach(t=>t.classList.toggle("active", t.dataset.lang==="pt"));
+  renderContentLang();
+}
+function renderContentLang(){
+  if(!lastGenData) return;
+  const c = lastGenData.content[genLang];
+  const disclosurePt = "Este conteúdo pode conter links de afiliado. Podemos receber uma comissão por compras qualificadas, sem custo adicional para você.";
+  const disclosureEn = "This content may contain affiliate links. We may earn a commission on qualifying purchases, at no extra cost to you.";
+  const blocks = [
+    {label: genLang==="pt"?"Copy de vendas":"Sales copy", text:c.copy},
+    {label: genLang==="pt"?"Artigo SEO":"SEO article", text:c.artigo},
+    {label: genLang==="pt"?"Roteiro de vídeo":"Video script", text:c.roteiro},
+  ];
+  document.getElementById("contentBundle").innerHTML = blocks.map((b,i)=>`
+    <div class="content-block">
+      <div class="content-block-head"><h4>${b.label}</h4><button class="copy-btn" onclick="copyGenBlock(${i})" title="Copiar"><i class="fa-solid fa-copy"></i></button></div>
+      <p id="genBlock${i}">${b.text}</p>
+      ${i===0?`<div class="affiliate-disclosure">${genLang==="pt"?disclosurePt:disclosureEn}</div>`:""}
+    </div>`).join("");
+}
+function copyGenBlock(i){
+  const el = document.getElementById("genBlock"+i);
+  if(!el || !navigator.clipboard) return;
+  navigator.clipboard.writeText(el.textContent).then(()=>showToast("Copiado"));
+}
+document.querySelectorAll(".lang-tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".lang-tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    genLang = t.dataset.lang;
+    renderContentLang();
+  });
+});
+
+/* =========================================================
+   REVISÃO DE CONTEÚDO
+========================================================= */
+let REVIEW_QUEUE = [];
+let openReviewId = null;
+async function loadReviewQueue(){
+  try{
+    REVIEW_QUEUE = await apiFetch("/content/bundles");
+  }catch(e){ REVIEW_QUEUE = []; }
+}
+function updateReviewBadge(){
+  const el = document.getElementById("reviewNavCount");
+  if(el) el.textContent = REVIEW_QUEUE.filter(r=>r.status==="pendente").length;
+}
+function timeAgo(ts){
+  const mins = Math.max(1, Math.round((Date.now()-ts)/60000));
+  if(mins<60) return `há ${mins}min`;
+  const hrs = Math.round(mins/60);
+  if(hrs<24) return `há ${hrs}h`;
+  return `há ${Math.round(hrs/24)}d`;
+}
+function renderReviewList(){
+  const listEl = document.getElementById("reviewList");
+  if(REVIEW_QUEUE.length===0){
+    listEl.innerHTML = `<div class="empty-state"><i class="fa-solid fa-clipboard-check"></i><h3>Nada pra revisar ainda</h3><p>Gere um bundle em "Geração de Conteúdo" — ele aparece aqui pra revisão antes de publicar.</p></div>`;
+    document.getElementById("reviewBulkBar").style.display = "none";
+    document.getElementById("reviewEditor").style.display = "none";
+    return;
+  }
+  document.getElementById("reviewBulkBar").style.display = "flex";
+  listEl.innerHTML = REVIEW_QUEUE.map(r=>`
+    <div class="review-row ${openReviewId===r.id?'active':''}">
+      <input type="checkbox" class="review-check" data-id="${r.id}" ${r.status==='aprovado'?'disabled':''}>
+      <div class="review-row-emoji">${r.productEmoji}</div>
+      <div class="review-row-main">
+        <div class="review-row-name">${r.productName}</div>
+        <div class="review-row-time">${timeAgo(r.createdAt)}</div>
+      </div>
+      <span class="status-pill ${r.status==='aprovado'?'ok':'warn'}">${r.status==='aprovado'?'Aprovado':'Pendente'}</span>
+      <button class="btn" style="padding:7px 12px;" onclick="openReviewItem(${r.id})">Abrir</button>
+    </div>`).join("");
+  updateBulkCount();
+}
+function openReviewItem(id){
+  openReviewId = id;
+  renderReviewList();
+  renderReviewEditor();
+}
+function renderReviewEditor(){
+  const editor = document.getElementById("reviewEditor");
+  const r = REVIEW_QUEUE.find(x=>x.id===openReviewId);
+  if(!r){ editor.style.display = "none"; return; }
+  editor.style.display = "block";
+  const bestHook = [...(r.hooks||[])].sort((a,b)=>b.score-a.score)[0];
+  editor.innerHTML = `
+    <div class="panel-head"><h3>${r.productEmoji} ${r.productName}</h3><span class="tag">${r.status==='aprovado'?'APROVADO':'PENDENTE'}</span></div>
+    ${bestHook?`<div class="review-hook-preview"><strong>Melhor hook (score ${bestHook.score}):</strong> ${bestHook.pt}</div>`:""}
+    <div class="review-fields">
+      <label>Copy de vendas (PT)<textarea id="rf-copy-pt" rows="3">${r.content.pt.copy}</textarea></label>
+      <label>Sales copy (EN)<textarea id="rf-copy-en" rows="3">${r.content.en.copy}</textarea></label>
+      <label>Artigo SEO (PT)<textarea id="rf-artigo-pt" rows="4">${r.content.pt.artigo}</textarea></label>
+      <label>SEO article (EN)<textarea id="rf-artigo-en" rows="4">${r.content.en.artigo}</textarea></label>
+      <label>Roteiro de vídeo (PT)<textarea id="rf-roteiro-pt" rows="3">${r.content.pt.roteiro}</textarea></label>
+      <label>Video script (EN)<textarea id="rf-roteiro-en" rows="3">${r.content.en.roteiro}</textarea></label>
+      <label>Notas privadas<textarea id="rf-notas" rows="2" placeholder="Só você vê isso...">${r.notes||""}</textarea></label>
+    </div>
+    <div class="review-nav">
+      <button class="btn" onclick="navReview(-1)"><i class="fa-solid fa-chevron-left"></i>Anterior</button>
+      <button class="btn" onclick="navReview(1)">Próximo<i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn" onclick="saveReviewEdits()"><i class="fa-solid fa-floppy-disk"></i>Salvar</button>
+      <button class="btn btn-primary" onclick="approveReview()"><i class="fa-solid fa-check"></i>Aprovar</button>
+      <button class="btn" onclick="copyReviewBundle()"><i class="fa-solid fa-copy"></i>Copiar bundle</button>
+    </div>`;
+}
+function navReview(delta){
+  if(REVIEW_QUEUE.length===0) return;
+  const idx = REVIEW_QUEUE.findIndex(x=>x.id===openReviewId);
+  const nextIdx = (idx + delta + REVIEW_QUEUE.length) % REVIEW_QUEUE.length;
+  openReviewId = REVIEW_QUEUE[nextIdx].id;
+  renderReviewList();
+  renderReviewEditor();
+}
+async function saveReviewEdits(){
+  const r = REVIEW_QUEUE.find(x=>x.id===openReviewId);
+  if(!r) return;
+  const content = {
+    pt: {
+      copy: document.getElementById("rf-copy-pt").value,
+      artigo: document.getElementById("rf-artigo-pt").value,
+      roteiro: document.getElementById("rf-roteiro-pt").value,
+    },
+    en: {
+      copy: document.getElementById("rf-copy-en").value,
+      artigo: document.getElementById("rf-artigo-en").value,
+      roteiro: document.getElementById("rf-roteiro-en").value,
+    },
+  };
+  const notes = document.getElementById("rf-notas").value;
+  try{
+    const updated = await apiFetch(`/content/bundles/${r.id}`, { method:"PATCH", body: JSON.stringify({content, notes}) });
+    Object.assign(r, updated);
+    showToast("Alterações salvas");
+  }catch(e){ showToast(e.message); }
+}
+async function approveReview(){
+  await saveReviewEdits();
+  try{
+    const updated = await apiFetch(`/content/bundles/${openReviewId}/approve`, { method:"POST" });
+    const r = REVIEW_QUEUE.find(x=>x.id===openReviewId);
+    if(r) Object.assign(r, updated);
+    renderReviewList();
+    renderReviewEditor();
+    updateReviewBadge();
+    showToast("Bundle aprovado");
+  }catch(e){ showToast(e.message); }
+}
+function copyReviewBundle(){
+  const r = REVIEW_QUEUE.find(x=>x.id===openReviewId);
+  if(!r || !navigator.clipboard) return;
+  const text = `${r.productName}
+
+COPY (PT): ${r.content.pt.copy}
+COPY (EN): ${r.content.en.copy}
+
+ARTIGO SEO (PT): ${r.content.pt.artigo}
+SEO ARTICLE (EN): ${r.content.en.artigo}
+
+ROTEIRO (PT): ${r.content.pt.roteiro}
+SCRIPT (EN): ${r.content.en.roteiro}`;
+  navigator.clipboard.writeText(text).then(()=>showToast("Bundle copiado"));
+}
+function updateBulkCount(){
+  const n = document.querySelectorAll(".review-check:checked").length;
+  const btn = document.getElementById("bulkApproveBtn");
+  btn.textContent = n>0 ? `Aprovar selecionados (${n})` : "Aprovar selecionados";
+  btn.disabled = n===0;
+}
+document.getElementById("reviewList").addEventListener("change", e=>{
+  if(e.target.classList.contains("review-check")) updateBulkCount();
+});
+document.getElementById("reviewSelectAll").addEventListener("change", e=>{
+  document.querySelectorAll(".review-check").forEach(cb=>{ if(!cb.disabled) cb.checked = e.target.checked; });
+  updateBulkCount();
+});
+document.getElementById("bulkApproveBtn").addEventListener("click", async ()=>{
+  const ids = [...document.querySelectorAll(".review-check:checked")].map(cb=>parseInt(cb.dataset.id));
+  try{
+    await apiFetch("/content/bundles/approve-bulk", { method:"POST", body: JSON.stringify({ids}) });
+    ids.forEach(id=>{ const r = REVIEW_QUEUE.find(x=>x.id===id); if(r) r.status = "aprovado"; });
+    renderReviewList();
+    updateReviewBadge();
+    showToast(`${ids.length} bundle(s) aprovado(s)`);
+  }catch(e){ showToast(e.message); }
+});
+
+/* =========================================================
+   CENTRO DE COMANDO IA
+========================================================= */
+let CMD_SETTINGS = { autonomyOn:false, suggestionsPerDay:5, removalWindow:7, strictFlag:true };
+async function loadCommandSettings(){
+  try{
+    CMD_SETTINGS = await apiFetch("/command-settings");
+  }catch(e){}
+}
+function goReviewItem(id){
+  document.querySelector('.nav-item[data-view="revisao"]').click();
+  openReviewItem(id);
+}
+function renderCommandCenter(){
+  document.getElementById("autonomyToggle").checked = CMD_SETTINGS.autonomyOn;
+  document.getElementById("cmdSuggestions").value = CMD_SETTINGS.suggestionsPerDay;
+  document.getElementById("cmdWindow").value = CMD_SETTINGS.removalWindow;
+  document.getElementById("cmdStrict").checked = CMD_SETTINGS.strictFlag;
+
+  const activeProducts = AFF_PRODUCTS.filter(p=>p.status!=="removido");
+  const activeCount = activeProducts.length;
+  const totalRevenue = activeProducts.reduce((sum,p)=>sum+(p.revenue||0),0);
+  const pendingReview = REVIEW_QUEUE.filter(r=>r.status==="pendente").length;
+  const summary = [
+    {icon:"fa-sack-dollar",color:"--green",soft:"--green-soft",label:"Receita total",value:money(totalRevenue)},
+    {icon:"fa-database",color:"--teal",soft:"--teal-soft",label:"Produtos ativos",value:String(activeCount)},
+    {icon:"fa-broom",color:"--coral",soft:"--coral-soft",label:"Fila de limpeza",value:String(REMOVAL_QUEUE.length)},
+    {icon:"fa-clipboard-check",color:"--amber",soft:"--amber-soft",label:"Bundles p/ revisar",value:String(pendingReview)},
+  ];
+  document.getElementById("cmdSummary").innerHTML = summary.map(k=>`
+    <div class="kpi-card" style="--kpi-glow:var(${k.soft})">
+      <div class="kpi-top"><div class="kpi-icon" style="--kpi-soft:var(${k.soft});--kpi-color:var(${k.color})"><i class="fa-solid ${k.icon}"></i></div></div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+    </div>`).join("");
+
+  const recent = REVIEW_QUEUE.slice(0,5);
+  document.getElementById("cmdRecentBundles").innerHTML = recent.length ? recent.map(r=>`
+    <div class="log-item">
+      <div class="log-dot" style="background:${r.status==='aprovado'?'var(--green)':'var(--amber)'}"></div>
+      <div class="lt"><div>${r.productEmoji} ${r.productName}</div><div class="lm">${r.status==='aprovado'?'Aprovado':'Pendente'} · ${timeAgo(r.createdAt)}</div></div>
+      <button class="btn" style="padding:6px 10px;font-size:10.5px;" onclick="goReviewItem(${r.id})">Abrir</button>
+    </div>`).join("") : `<p style="font-size:12px;color:var(--text-faint);">Nenhum bundle gerado ainda.</p>`;
+
+  let bestHook = null, bestProduct = "";
+  REVIEW_QUEUE.forEach(r=>{
+    (r.hooks||[]).forEach(h=>{
+      if(!bestHook || h.score>bestHook.score){ bestHook = h; bestProduct = r.productName; }
+    });
+  });
+  document.getElementById("cmdBestHook").innerHTML = bestHook ? `
+    <div class="hook-card best">
+      <span class="hook-best-badge">Melhor hook geral</span>
+      <div class="hook-score"><span class="forecast-val">Score ${bestHook.score}</span></div>
+      <div class="hook-text">${bestHook.pt}</div>
+      <div class="hook-text en">${bestHook.en}</div>
+      <div class="hook-motivo">${bestProduct} — ${bestHook.motivo}</div>
+    </div>` : `<p style="font-size:12px;color:var(--text-faint);">Gere um bundle de conteúdo pra ver o ranking de hooks aqui.</p>`;
+}
+document.getElementById("cmdSaveBtn").addEventListener("click", async ()=>{
+  const payload = {
+    autonomyOn: document.getElementById("autonomyToggle").checked,
+    suggestionsPerDay: parseInt(document.getElementById("cmdSuggestions").value) || 5,
+    removalWindow: parseInt(document.getElementById("cmdWindow").value) || 7,
+    strictFlag: document.getElementById("cmdStrict").checked,
+  };
+  try{
+    CMD_SETTINGS = await apiFetch("/command-settings", { method:"PUT", body: JSON.stringify(payload) });
+    showToast("Regras salvas");
+  }catch(e){ showToast(e.message); }
+});
+async function flagForRemoval(id){
+  const p = AFF_PRODUCTS.find(x=>x.id===id);
+  if(!p) return;
+  try{
+    await apiFetch(`/catalog/products/${id}/flag`, { method:"POST", body: JSON.stringify({}) });
+    await loadRemovalQueue();
+    renderCleanupQueue();
+    showToast(p.name+" marcado para revisão");
+  }catch(e){ showToast(e.message); }
+}
+async function confirmRemoval(id){
+  try{
+    await apiFetch(`/catalog/products/${id}/confirm-removal`, { method:"POST" });
+    const p = AFF_PRODUCTS.find(x=>x.id===id);
+    if(p) p.status = "removido";
+    await loadRemovalQueue();
+    renderCleanupQueue();
+    renderCatalogProducts();
+    showToast("Produto removido do catálogo");
+  }catch(e){ showToast(e.message); }
+}
+async function keepProduct(id){
+  try{
+    await apiFetch(`/catalog/products/${id}/keep`, { method:"POST" });
+    await loadRemovalQueue();
+    renderCleanupQueue();
+    showToast("Produto mantido no catálogo");
+  }catch(e){ showToast(e.message); }
+}
+function renderCleanupQueue(){
+  const countEls = [document.getElementById("queueCount"), document.getElementById("queueNavCount")];
+  countEls.forEach(el=>{ if(el) el.textContent = REMOVAL_QUEUE.length; });
+  const list = document.getElementById("cleanupList");
+  if(!list) return;
+  if(REMOVAL_QUEUE.length===0){
+    list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-broom"></i><h3>Fila de limpeza vazia</h3><p>Quando algum produto cair de performance, ele aparece aqui pra você decidir o que fazer — nada é removido sozinho.</p></div>`;
+    return;
+  }
+  list.innerHTML = REMOVAL_QUEUE.map(q=>`
+    <div class="queue-item">
+      <div class="queue-top">
+        <div><div class="queue-name">${q.name}</div><div class="queue-meta">${q.platform} · ${q.days>0 ? q.days+" dias abaixo da meta" : "sinalizado manualmente"}</div></div>
+        <span class="status-pill warn">Aguardando decisão</span>
+      </div>
+      <div class="queue-reason">${q.reason}</div>
+      <div class="queue-stats">
+        <div class="aff-meta-box"><div class="v">${q.metrics.cliques}</div><div class="l">Cliques</div></div>
+        <div class="aff-meta-box"><div class="v">${q.metrics.conversao}</div><div class="l">Conversão</div></div>
+      </div>
+      <div class="queue-action-note"><strong>Ação recomendada:</strong> ${q.action}</div>
+      <div class="queue-actions">
+        <button class="btn" style="flex:1;justify-content:center;" onclick="keepProduct(${q.catalog_product_id})"><i class="fa-solid fa-check"></i>Manter</button>
+        <button class="btn btn-danger" style="flex:1;justify-content:center;" onclick="confirmRemoval(${q.catalog_product_id})"><i class="fa-solid fa-trash-can"></i>Confirmar remoção</button>
+      </div>
+    </div>`).join("");
+}
+function renderCatalogView(){
+  populateCatalogFilters();
+  renderCatalogProducts();
+  renderCleanupQueue();
+}
+["catPlatFilter","catFaseFilter","catMarginFilter","catMomentumFilter"].forEach(id=>{
+  document.getElementById(id).addEventListener("change", renderCatalogProducts);
+});
+
+/* =========================================================
+   RENDER: KPIs
+========================================================= */
+function renderKPIs(){
+  const avgMargin = Math.round(PRODUCTS.reduce((s,p)=>s+p.margin,0)/PRODUCTS.length);
+  const cats = new Set(PRODUCTS.map(p=>p.category)).size;
+  const kpis = [
+    {icon:"fa-fire",color:"--coral",soft:"--coral-soft",label:"Produtos em alta",value:PRODUCTS.filter(p=>p.trend==="up").length,trend:"+3 esta semana"},
+    {icon:"fa-sack-dollar",color:"--green",soft:"--green-soft",label:"Margem média estimada",value:avgMargin+"%",trend:"acima da meta"},
+    {icon:"fa-layer-group",color:"--teal",soft:"--teal-soft",label:"Nichos monitorados",value:cats,trend:"ativos agora"},
+    {icon:"fa-star",color:"--amber",soft:"--amber-soft",label:"Itens na Watchlist",value:watchlist.length,trend:"salvos por você"},
+  ];
+  document.getElementById("kpiGrid").innerHTML = kpis.map(k=>`
+    <div class="kpi-card" style="--kpi-glow:var(${k.soft})">
+      <div class="kpi-top">
+        <div class="kpi-icon" style="--kpi-soft:var(${k.soft});--kpi-color:var(${k.color})"><i class="fa-solid ${k.icon}"></i></div>
+        <span class="kpi-trend">${k.trend}</span>
+      </div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+    </div>`).join("");
+}
+
+/* =========================================================
+   RENDER: TOP 6 TENDÊNCIAS
+========================================================= */
+function renderTrendCards(){
+  const top6 = [...PRODUCTS].sort((a,b)=>b.score-a.score).slice(0,6);
+  document.getElementById("trendScroll").innerHTML = top6.map(p=>`
+    <div class="trend-card" onclick="openModal(${p.id})">
+      ${thumbHtml(p,'trend-photo')}
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">
+        <div>
+          <div class="trend-name">${p.name}</div>
+          <div class="trend-cat">${p.category}</div>
+        </div>
+        ${scoreRing(p.score,"sm")}
+      </div>
+      <div class="trend-foot">
+        <span class="trend-margin">${p.margin}% margem</span>
+        <span class="badge ${compBadgeClass(p.competition)}">${p.competition}</span>
+      </div>
+    </div>`).join("");
+}
+
+/* =========================================================
+   RENDER: RANKING TABLE
+========================================================= */
+function renderRankTable(){
+  const sorted = [...PRODUCTS].sort((a,b)=>b.score-a.score);
+  document.getElementById("rankBody").innerHTML = sorted.map(p=>`
+    <tr onclick="openModal(${p.id})">
+      <td>${scoreRing(p.score,"sm")}</td>
+      <td><div class="prod-cell">${thumbHtml(p,'prod-thumb')}<div><div class="nm">${p.name}</div><div class="ct">${p.category}</div></div></div></td>
+      <td style="font-family:var(--font-mono);font-weight:700;">${p.score}</td>
+      <td style="color:var(--green);font-family:var(--font-mono);font-weight:700;">${p.margin}%</td>
+      <td><span class="badge ${compBadgeClass(p.competition)}">${p.competition}</span></td>
+      <td><span class="${trendClass(p.trend)}"><i class="fa-solid ${trendIcon(p.trend)}"></i> ${p.trendPct}</span></td>
+      <td style="color:var(--text-muted);font-family:var(--font-mono);font-size:11.5px;">${p.searchVolume}</td>
+      <td><button class="icon-btn ${watchlist.includes(p.id)?'active':''}" onclick="toggleWatch(${p.id},event)"><i class="fa-${watchlist.includes(p.id)?'solid':'regular'} fa-star"></i></button></td>
+    </tr>`).join("");
+}
+
+/* =========================================================
+   RENDER: PRODUTOS (catálogo com filtros)
+========================================================= */
+function populateCatFilter(){
+  const cats = [...new Set(PRODUCTS.map(p=>p.category))];
+  const sel = document.getElementById("catFilter");
+  sel.innerHTML = '<option value="">Todas categorias</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join("");
+}
+function renderProductGrid(){
+  const q = document.getElementById("searchInput").value.toLowerCase().trim();
+  const cat = document.getElementById("catFilter").value;
+  const minScore = parseInt(document.getElementById("scoreFilter").value);
+  const comp = document.getElementById("compFilter").value;
+
+  const filtered = PRODUCTS.filter(p=>{
+    const matchQ = !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.tags.some(t=>t.toLowerCase().includes(q));
+    const matchCat = !cat || p.category===cat;
+    const matchScore = p.score >= minScore;
+    const matchComp = !comp || p.competition===comp;
+    return matchQ && matchCat && matchScore && matchComp;
+  }).sort((a,b)=>b.score-a.score);
+
+  const grid = document.getElementById("productGrid");
+  if(filtered.length===0){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-magnifying-glass"></i><h3>Nenhum produto encontrado</h3><p>Ajuste os filtros ou tente outro termo de busca.</p></div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(p=>`
+    <div class="product-card" onclick="openModal(${p.id})">
+      ${thumbHtml(p,'pc-photo')}
+      <div class="pc-top">
+        ${scoreRing(p.score,"sm")}
+        <button class="icon-btn ${watchlist.includes(p.id)?'active':''}" onclick="toggleWatch(${p.id},event)"><i class="fa-${watchlist.includes(p.id)?'solid':'regular'} fa-star"></i></button>
+      </div>
+      <div class="pc-name">${p.name}</div>
+      <div class="pc-cat">${p.category}</div>
+      <div class="pc-tags">${p.tags.map(t=>`<span class="chip">${t}</span>`).join("")}</div>
+      <div class="pc-metrics">
+        <div class="pc-price"><span class="cost">${money(p.priceCost)}</span><span class="sell">${money(p.priceSell)}</span></div>
+        <div class="pc-margin">${p.margin}% margem</div>
+      </div>
+    </div>`).join("");
+}
+
+/* =========================================================
+   RENDER: NICHOS
+========================================================= */
+function renderNiches(){
+  document.getElementById("nicheGrid").innerHTML = NICHES.map(n=>`
+    <div class="niche-card">
+      <div class="niche-head">
+        <div class="niche-emoji">${n.emoji}</div>
+        <div>
+          <h3>${n.name}</h3>
+          <div class="comp">Concorrência <span class="badge ${compBadgeClass(n.competition)}" style="margin-left:4px;">${n.competition}</span></div>
+        </div>
+      </div>
+      <div class="niche-metrics">
+        <div class="nm-box"><div class="v">${n.market}</div><div class="l">Mercado BR/ano</div></div>
+        <div class="nm-box"><div class="v">${n.margin}%</div><div class="l">Margem média</div></div>
+        <div class="nm-box"><div class="v">+${n.growth}%</div><div class="l">Cresc. anual</div></div>
+      </div>
+      <div class="niche-desc">${n.desc}</div>
+      <div class="niche-tags">${n.tags.map(t=>`<span class="chip">${t}</span>`).join("")}</div>
+    </div>`).join("");
+}
+
+/* =========================================================
+   RENDER: WATCHLIST
+========================================================= */
+function renderWatchlist(){
+  const items = PRODUCTS.filter(p=>watchlist.includes(p.id)).sort((a,b)=>b.score-a.score);
+  const wrap = document.getElementById("watchTableWrap");
+  const empty = document.getElementById("watchEmpty");
+  if(items.length===0){ wrap.style.display="none"; empty.style.display="flex"; return; }
+  wrap.style.display="block"; empty.style.display="none";
+  document.getElementById("watchBody").innerHTML = items.map(p=>`
+    <tr onclick="openModal(${p.id})">
+      <td>${scoreRing(p.score,"sm")}</td>
+      <td><div class="prod-cell">${thumbHtml(p,'prod-thumb')}<div><div class="nm">${p.name}</div><div class="ct">${p.category}</div></div></div></td>
+      <td style="font-family:var(--font-mono);font-weight:700;">${p.score}</td>
+      <td style="color:var(--green);font-family:var(--font-mono);font-weight:700;">${p.margin}%</td>
+      <td style="font-family:var(--font-mono);">${money(p.priceSell)}</td>
+      <td><span class="${trendClass(p.trend)}"><i class="fa-solid ${trendIcon(p.trend)}"></i> ${p.trendPct}</span></td>
+      <td><button class="icon-btn active" onclick="toggleWatch(${p.id},event)"><i class="fa-solid fa-trash-can"></i></button></td>
+    </tr>`).join("");
+}
+
+/* =========================================================
+   MODAL DE DETALHES
+========================================================= */
+function openModal(id){
+  const p = PRODUCTS.find(x=>x.id===id);
+  if(!p) return;
+  const isWatched = watchlist.includes(p.id);
+  document.getElementById("modalContent").innerHTML = `
+    <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-head">
+      ${thumbHtml(p,'modal-photo')}
+      <div>
+        <h2>${p.name}</h2>
+        <div class="cat">${p.category}</div>
+      </div>
+      ${scoreRing(p.score,"lg")}
+    </div>
+    <div class="modal-grid">
+      <div class="mg-box"><div class="v">${money(p.priceCost)}</div><div class="l">Custo</div></div>
+      <div class="mg-box"><div class="v">${money(p.priceSell)}</div><div class="l">Venda sugerida</div></div>
+      <div class="mg-box"><div class="v" style="color:var(--green)">${p.margin}%</div><div class="l">Margem</div></div>
+      <div class="mg-box"><div class="v">${p.saturation}%</div><div class="l">Saturação</div></div>
+    </div>
+    <div class="modal-section">
+      <h4>Sobre o produto</h4>
+      <p>${p.description}</p>
+    </div>
+    <div class="modal-section">
+      <h4>Sinais de demanda</h4>
+      <p><strong style="color:var(--text)">${p.searchVolume}</strong> de buscas estimadas · tendência <span class="${trendClass(p.trend)}"><i class="fa-solid ${trendIcon(p.trend)}"></i> ${p.trendPct}</span> nas últimas 8 semanas</p>
+    </div>
+    <div class="modal-section">
+      <h4>Dicas de estratégia</h4>
+      <ul class="tips-list">${p.tips.map(t=>`<li><i class="fa-solid fa-bolt"></i>${t}</li>`).join("")}</ul>
+    </div>
+    <div class="modal-section">
+      <h4>Plataformas recomendadas</h4>
+      <div class="plat-list">${p.platforms.map(pl=>`<span class="plat-chip">${pl}</span>`).join("")}</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="toggleWatch(${p.id});closeModal();"><i class="fa-${isWatched?'solid':'regular'} fa-star"></i>${isWatched?'Remover da watchlist':'Adicionar à watchlist'}</button>
+      <a class="btn" href="https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(p.name)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i>Ver no AliExpress</a>
+      <a class="btn" href="https://trends.google.com/trends/explore?q=${encodeURIComponent(p.name)}&geo=BR" target="_blank" rel="noopener"><i class="fa-solid fa-chart-line"></i>Ver no Google Trends</a>
+    </div>
+  `;
+  document.getElementById("modalOverlay").classList.add("open");
+}
+function closeModal(){document.getElementById("modalOverlay").classList.remove("open");}
+document.getElementById("modalOverlay").addEventListener("click",e=>{if(e.target.id==="modalOverlay")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();}});
+
+/* =========================================================
+   GRÁFICOS
+========================================================= */
+function buildCharts(){
+  const ctx1 = document.getElementById("lineChart");
+  const top5 = [...PRODUCTS].sort((a,b)=>b.score-a.score).slice(0,5);
+  const weeks = ["S1","S2","S3","S4","S5","S6","S7","S8"];
+  const palette = ["#00E6A6","#00B4FF","#7B5CFF","#4DFFC4","#5AC8FF"];
+
+  const series = top5.map((p,i)=>{
+    const base = 40 + i*6;
+    const growthFactor = p.trend==="up" ? 1.16 : p.trend==="down" ? 0.95 : 1.02;
+    let vals=[base];
+    for(let w=1;w<8;w++){ vals.push(Math.round(vals[w-1]*growthFactor*(0.94+Math.random()*0.12))); }
+    return {label:p.name,data:vals,borderColor:palette[i],backgroundColor:palette[i]+"22",tension:.4,pointRadius:2,borderWidth:2.5};
+  });
+
+  if(lineChartInstance) lineChartInstance.destroy();
+  lineChartInstance = new Chart(ctx1,{
+    type:"line",
+    data:{labels:weeks,datasets:series},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:"bottom",labels:{color:"#8B93A6",boxWidth:8,boxHeight:8,usePointStyle:true,font:{size:10,family:"Inter"}}}},
+      scales:{
+        x:{ticks:{color:"#5B6478",font:{size:10}},grid:{color:"#28324640"}},
+        y:{ticks:{color:"#5B6478",font:{size:10}},grid:{color:"#28324640"}}
+      }
+    }
+  });
+
+  const ctx2 = document.getElementById("donutChart");
+  const cats = [...new Set(PRODUCTS.map(p=>p.category))];
+  const counts = cats.map(c=>PRODUCTS.filter(p=>p.category===c).length);
+  const donutPalette = ["#00E6A6","#00B4FF","#7B5CFF","#4DFFC4","#5AC8FF","#B39DFF","#00C2E0","#33FFC2"];
+
+  if(donutChartInstance) donutChartInstance.destroy();
+  donutChartInstance = new Chart(ctx2,{
+    type:"doughnut",
+    data:{labels:cats,datasets:[{data:counts,backgroundColor:donutPalette,borderColor:"#151B23",borderWidth:3}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:"68%",
+      plugins:{legend:{display:true,position:"bottom",labels:{color:"#8B93A6",boxWidth:8,boxHeight:8,usePointStyle:true,font:{size:9.5,family:"Inter"},padding:8}}}
+    }
+  });
+}
+
+/* =========================================================
+   SCAN DE TENDÊNCIAS
+========================================================= */
+let scanRunning = false;
+function runScan(){
+  if(scanRunning) return;
+  scanRunning = true;
+  const overlay = document.getElementById("scanOverlay");
+  const fill = document.getElementById("scanBarFill");
+  const log = document.getElementById("scanLog");
+  const sub = document.querySelector(".scan-sub");
+  if(sub) sub.textContent = "IA pesquisando um produto real na web, em paralelo aos sinais abaixo";
+  fill.style.width = "0%";
+  log.innerHTML = SOURCES.map(s=>`<div class="scan-log-item" id="src-${s.name.replace(/\s/g,'')}"><div class="dot"></div><span>Aguardando ${s.name}...</span></div>`).join("");
+  overlay.classList.add("open");
+
+  const scanPromise = apiFetch("/products/scan", { method:"POST" })
+    .then(result=>({ ok:true, result }))
+    .catch(err=>{ console.error("Scan falhou:",err); return { ok:false, error:err }; });
+
+  let step = 0;
+  const total = SOURCES.length;
+  const interval = setInterval(()=>{
+    step++;
+    const pct = Math.min(100, Math.round((step/total)*100));
+    fill.style.width = pct+"%";
+    if(step<=total){
+      const src = SOURCES[step-1];
+      const el = document.getElementById("src-"+src.name.replace(/\s/g,''));
+      if(el){
+        el.classList.add("done");
+        el.querySelector(".dot").innerHTML = '<i class="fa-solid fa-check"></i>';
+        const found = Math.floor(Math.random()*40)+8;
+        el.querySelector("span").textContent = `${src.name} — ${found} sinais coletados`;
+      }
+    }
+    if(step>=total){
+      clearInterval(interval);
+      finishScan(scanPromise, overlay);
+    }
+  },650);
+}
+async function finishScan(scanPromise, overlay){
+  const outcome = await scanPromise;
+  setTimeout(async ()=>{
+    overlay.classList.remove("open");
+    scanRunning = false;
+    if(!outcome.ok){
+      showToast(outcome.error.message);
+      return;
+    }
+    const discovered = applyScanUpdate(outcome.result && outcome.result.product);
+    if(discovered){
+      showToast(`Novo produto descoberto: ${discovered.emoji} ${discovered.name}`);
+    }else{
+      showToast("Dados atualizados com sucesso");
+    }
+  },550);
+}
+function applyScanUpdate(product){
+  PRODUCTS.forEach(p=>{
+    const delta = Math.round((Math.random()-0.42)*4);
+    p.score = Math.max(40,Math.min(99,p.score+delta));
+    p.demand = Math.max(30,Math.min(99,p.demand+delta));
+  });
+  if(product && !PRODUCTS.find(p=>p.id===product.id)){
+    PRODUCTS.push(product);
+  }
+  renderAll();
+  updateProdutosNavCount();
+  return product;
+}
+document.getElementById("scanBtn").addEventListener("click",runScan);
+
+/* =========================================================
+   FILTROS - LISTENERS
+========================================================= */
+["searchInput","catFilter","scoreFilter","compFilter"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",renderProductGrid);
+  document.getElementById(id).addEventListener("change",renderProductGrid);
+});
+
+/* =========================================================
+   INIT
+========================================================= */
+function renderAll(){
+  renderKPIs();
+  renderTrendCards();
+  renderRankTable();
+  renderProductGrid();
+  renderNiches();
+  renderWatchlist();
+  buildCharts();
+}
+(async function init(){
+  await loadAuth();
+  if(currentUser){
+    showApp();
+    updateUserUI();
+    await bootstrapAuthenticatedApp();
+    const params = new URLSearchParams(window.location.search);
+    if(params.has("social")){
+      showToast(params.get("social")==="connected" ? "Conta conectada com sucesso" : "Não foi possível conectar — tente novamente");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if(params.has("billing")){
+      if(params.get("billing")==="success"){
+        try{ currentUser = await apiFetch("/auth/me"); updateUserUI(); }catch(e){}
+        showToast("Assinatura Full ativada!");
+      }else{
+        showToast("Assinatura não concluída");
+      }
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }else{
+    showAuthScreen();
+  }
+})();
+</script>
+</body>
+</html>

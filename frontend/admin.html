@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendDrop PRO — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D1117;
+  --bg-2:#090C10;
+  --surface:#151B23;
+  --surface-2:#1C232D;
+  --border:#2A333F99;
+  --border-solid:#2C3540;
+  --text:#F3F6F9;
+  --text-muted:#8B93A6;
+  --amber:#00B4FF;
+  --teal:#7B5CFF;
+  --green:#00E6A6;
+  --coral:#FF4D6D;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg-2),var(--bg));
+  color:var(--text);
+  font-family:"Inter",sans-serif;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 20px;
+}
+h1,h2{font-family:"Poppins",sans-serif;}
+.hidden{display:none !important;}
+
+/* login */
+.login-card{
+  max-width:380px;
+  width:100%;
+  margin-top:60px;
+  background:var(--surface);
+  border:1px solid var(--border-solid);
+  border-radius:20px;
+  padding:32px;
+}
+.login-card h1{font-size:22px;margin:0 0 4px;}
+.login-card p{color:var(--text-muted);font-size:14px;margin:0 0 24px;}
+label{display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;}
+input{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--border-solid);
+  border-radius:10px;
+  padding:10px 12px;
+  color:var(--text);
+  font-size:14px;
+  margin-bottom:16px;
+}
+button{
+  cursor:pointer;
+  border:none;
+  border-radius:10px;
+  font-weight:600;
+  font-size:14px;
+  font-family:inherit;
+}
+.btn-primary{
+  width:100%;
+  padding:12px;
+  background:linear-gradient(90deg,var(--green),var(--amber),var(--teal));
+  color:#06110D;
+}
+.error{color:var(--coral);font-size:13px;min-height:18px;margin-bottom:8px;}
+
+/* panel */
+.panel{max-width:1100px;width:100%;}
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.panel-header h1{font-size:24px;margin:0;}
+.logout-btn{background:var(--surface-2);color:var(--text);padding:8px 16px;border:1px solid var(--border-solid);}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.metric-card{background:var(--surface);border:1px solid var(--border-solid);border-radius:16px;padding:18px;}
+.metric-card .value{font-size:28px;font-weight:800;font-family:"Poppins",sans-serif;}
+.metric-card .label{color:var(--text-muted);font-size:13px;margin-top:4px;}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:16px;overflow:hidden;}
+th,td{text-align:left;padding:12px 16px;font-size:14px;border-bottom:1px solid var(--border-solid);}
+th{color:var(--text-muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;}
+tr:last-child td{border-bottom:none;}
+.badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+.badge.active{background:#00E6A622;color:var(--green);}
+.badge.suspended{background:#FF4D6D22;color:var(--coral);}
+.action-btn{padding:6px 14px;background:var(--surface-2);color:var(--text);border:1px solid var(--border-solid);}
+.action-btn.suspend{color:var(--coral);}
+.action-btn.activate{color:var(--green);}
+.empty{color:var(--text-muted);padding:24px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="login-card" id="loginCard">
+  <h1>TrendDrop <span style="color:var(--teal)">PRO</span></h1>
+  <p>Painel de administração</p>
+  <form id="loginForm">
+    <label>E-mail<input type="email" id="loginEmail" required></label>
+    <label>Senha<input type="password" id="loginPassword" required></label>
+    <div class="error" id="loginError"></div>
+    <button type="submit" class="btn-primary">Entrar</button>
+  </form>
+</div>
+
+<div class="panel hidden" id="panel">
+  <div class="panel-header">
+    <h1>Painel de Admin</h1>
+    <button class="logout-btn" id="logoutBtn">Sair</button>
+  </div>
+  <div class="metrics" id="metrics"></div>
+  <table>
+    <thead>
+      <tr><th>Loja</th><th>Dono</th><th>E-mail</th><th>Status</th><th>Cadastrada em</th><th></th></tr>
+    </thead>
+    <tbody id="tenantsBody"></tbody>
+  </table>
+</div>
+
+<script>
+const API_BASE = "http://localhost:8000/api";
+
+async function apiFetch(path, options = {}){
+  const res = await fetch(`${API_BASE}${path}`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  let body = null;
+  try{ body = await res.json(); }catch(e){ body = null; }
+  if(!res.ok){
+    const msg = (body && body.detail) ? body.detail : "Algo deu errado. Tente novamente.";
+    throw new Error(msg);
+  }
+  return body;
+}
+
+function showLogin(){
+  document.getElementById("loginCard").classList.remove("hidden");
+  document.getElementById("panel").classList.add("hidden");
+}
+function showPanel(){
+  document.getElementById("loginCard").classList.add("hidden");
+  document.getElementById("panel").classList.remove("hidden");
+}
+function fmtDate(iso){
+  return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+function renderMetrics(m){
+  const cards = [
+    {label:"Lojas totais", value:m.total_lojas},
+    {label:"Lojas ativas", value:m.lojas_ativas},
+    {label:"Lojas suspensas", value:m.lojas_suspensas},
+    {label:"Novas (30 dias)", value:m.novas_ultimos_30_dias},
+  ];
+  document.getElementById("metrics").innerHTML = cards.map(c=>
+    `<div class="metric-card"><div class="value">${c.value}</div><div class="label">${c.label}</div></div>`
+  ).join("");
+}
+
+function renderTenants(list){
+  const body = document.getElementById("tenantsBody");
+  if(!list.length){
+    body.innerHTML = `<tr><td colspan="6" class="empty">Nenhuma loja cadastrada ainda.</td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(t=>{
+    const isActive = t.status === "active";
+    return `<tr data-id="${t.id}">
+      <td>${t.nome_loja}</td>
+      <td>${t.owner_nome || "—"}</td>
+      <td>${t.owner_email || "—"}</td>
+      <td><span class="badge ${t.status}">${isActive ? "Ativa" : "Suspensa"}</span></td>
+      <td>${fmtDate(t.created_at)}</td>
+      <td><button class="action-btn ${isActive?'suspend':'activate'}" onclick="toggleTenantStatus('${t.id}','${t.status}')">${isActive?'Suspender':'Reativar'}</button></td>
+    </tr>`;
+  }).join("");
+}
+
+async function loadPanel(){
+  const [metrics, tenants] = await Promise.all([
+    apiFetch("/admin/metrics"),
+    apiFetch("/admin/tenants"),
+  ]);
+  renderMetrics(metrics);
+  renderTenants(tenants);
+}
+
+async function toggleTenantStatus(id, currentStatus){
+  const newStatus = currentStatus === "active" ? "suspended" : "active";
+  try{
+    await apiFetch(`/admin/tenants/${id}/status`, { method:"PATCH", body: JSON.stringify({status:newStatus}) });
+    await loadPanel();
+  }catch(e){
+    alert(e.message);
+  }
+}
+
+document.getElementById("loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const senha = document.getElementById("loginPassword").value;
+  const err = document.getElementById("loginError");
+  err.textContent = "";
+  try{
+    const user = await apiFetch("/auth/login", { method:"POST", body: JSON.stringify({email, senha}) });
+    if(user.role !== "admin"){
+      await apiFetch("/auth/logout", { method:"POST" });
+      err.textContent = "Acesso restrito a administradores.";
+      return;
+    }
+    showPanel();
+    await loadPanel();
+  }catch(e){ err.textContent = e.message; }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+  try{ await apiFetch("/auth/logout", { method:"POST" }); }catch(e){}
+  showLogin();
+});
+
+(async function init(){
+  try{
+    const user = await apiFetch("/auth/me");
+    if(user.role === "admin"){
+      showPanel();
+      await loadPanel();
+    }else{
+      showLogin();
+    }
+  }catch(e){
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>

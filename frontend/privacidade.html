@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendDrop PRO — Política de Privacidade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D1117;
+  --bg-2:#090C10;
+  --surface:#151B23;
+  --border:#2A333F99;
+  --border-solid:#2C3540;
+  --text:#F3F6F9;
+  --text-muted:#8B93A6;
+  --text-faint:#5B6478;
+  --green:#00E6A6;
+  --amber:#00B4FF;
+  --teal:#7B5CFF;
+  --brand-gradient:linear-gradient(135deg,var(--green) 0%,var(--amber) 55%,var(--teal) 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:radial-gradient(ellipse 1200px 800px at 15% -10%, #16203222 0%, transparent 60%), var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  line-height:1.7;
+  min-height:100vh;
+}
+.top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;border-bottom:1px solid var(--border-solid);
+}
+.brand{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;}
+.brand span{background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.top a{color:var(--text-muted);font-size:13px;font-weight:600;}
+.top a:hover{color:var(--text);}
+.wrap{max-width:760px;margin:0 auto;padding:48px 24px 100px;}
+h1{font-family:'Poppins',sans-serif;font-size:26px;margin-bottom:8px;}
+.updated{color:var(--text-faint);font-size:12.5px;font-family:monospace;margin-bottom:36px;}
+h2{font-family:'Poppins',sans-serif;font-size:16px;margin-top:36px;margin-bottom:12px;color:var(--text);}
+p, li{color:var(--text-muted);font-size:14px;margin-bottom:12px;}
+ul, ol{padding-left:22px;margin-bottom:12px;}
+strong{color:var(--text);}
+.box{background:var(--surface);border:1px solid var(--border-solid);border-radius:14px;padding:20px 22px;margin-bottom:12px;}
+a{color:var(--green);}
+table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:13px;}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border-solid);color:var(--text-muted);vertical-align:top;}
+th{color:var(--text);font-family:'Poppins',sans-serif;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;}
+.foot{margin-top:48px;padding-top:24px;border-top:1px solid var(--border-solid);color:var(--text-faint);font-size:12px;}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">TrendDrop<span>PRO</span></div>
+    <a href="trenddrop-pro.html">&larr; Voltar ao app</a>
+  </div>
+  <div class="wrap">
+    <h1>Política de Privacidade</h1>
+    <div class="updated">Última atualização: agosto de 2026</div>
+
+    <div class="box">
+      <p style="margin-bottom:0;">Esta política explica como o <strong>TrendDrop PRO</strong>, operado por <strong>Obelisco Radical Unipessoal Lda.</strong> (NIF 516753924, Lisboa, Portugal) — o "controlador" dos seus dados pessoais — coleta, usa e protege as suas informações. Aplicamos os princípios do Regulamento Geral de Proteção de Dados (RGPD/GDPR, União Europeia) e, para usuários no Brasil, da Lei Geral de Proteção de Dados (LGPD).</p>
+    </div>
+
+    <h2>1. Que dados coletamos</h2>
+    <table>
+      <tr><th>Categoria</th><th>Exemplos</th></tr>
+      <tr><td>Dados de conta</td><td>Nome, e-mail, senha (armazenada com hash bcrypt, nunca em texto puro), nome da loja</td></tr>
+      <tr><td>Login social</td><td>Se você entrar com Google: nome, e-mail e ID da conta Google fornecidos pelo Google</td></tr>
+      <tr><td>Conexões de redes sociais</td><td>Se você conectar Instagram/Facebook: tokens de acesso (armazenados criptografados) e lista de páginas/contas conectadas</td></tr>
+      <tr><td>Dados de operação</td><td>Produtos que você pesquisa, salva ou cadastra; conteúdo gerado; configurações da sua loja</td></tr>
+      <tr><td>Dados de pagamento</td><td>Processados diretamente pela Stripe — nós recebemos apenas o status da assinatura, nunca o número do seu cartão</td></tr>
+      <tr><td>Dados técnicos</td><td>Cookie de sessão (autenticação), endereço IP e registros de acesso ao servidor</td></tr>
+    </table>
+
+    <h2>2. Para que usamos esses dados</h2>
+    <ul>
+      <li><strong>Prestar o serviço</strong>: autenticar sua conta, isolar os dados da sua loja dos de outras lojas, processar sua assinatura.</li>
+      <li><strong>Funcionalidades de IA</strong>: enviamos dados do produto (nome, categoria) para a API da Anthropic (Claude) gerar sugestões e conteúdo — não enviamos seus dados de conta ou de pagamento pra essa finalidade.</li>
+      <li><strong>Publicação social</strong>: usamos os tokens do Meta apenas para listar suas páginas conectadas quando você solicita; não publicamos nada automaticamente.</li>
+      <li><strong>Comunicação</strong>: avisos sobre sua conta, cobrança ou mudanças no serviço.</li>
+    </ul>
+    <p>A base legal para esses tratamentos é a <strong>execução do contrato</strong> (prestar o serviço que você contratou) e, quando aplicável, o <strong>consentimento</strong> que você dá ao conectar uma conta Google ou Meta.</p>
+
+    <h2>3. Com quem compartilhamos dados</h2>
+    <p>Não vendemos seus dados. Compartilhamos dados apenas com prestadores de serviço que operam a infraestrutura do TrendDrop PRO, cada um processando só o necessário pra sua função:</p>
+    <table>
+      <tr><th>Prestador</th><th>Função</th></tr>
+      <tr><td>MongoDB Atlas</td><td>Armazenamento do banco de dados</td></tr>
+      <tr><td>Anthropic (Claude API)</td><td>Geração de conteúdo e sugestões por IA</td></tr>
+      <tr><td>Stripe</td><td>Processamento de pagamentos e assinaturas</td></tr>
+      <tr><td>Google</td><td>Login social (OAuth), quando você escolhe entrar com Google</td></tr>
+      <tr><td>Meta (Facebook/Instagram)</td><td>Conexão de contas sociais, quando você opta por conectar</td></tr>
+    </table>
+
+    <h2>4. Transferência internacional de dados</h2>
+    <p>Alguns desses prestadores processam dados fora do Espaço Económico Europeu (ex: Estados Unidos). Nesses casos, contamos com as salvaguardas contratuais oferecidas por esses prestadores (como Cláusulas Contratuais-Tipo da Comissão Europeia) para garantir um nível de proteção adequado.</p>
+
+    <h2>5. Por quanto tempo guardamos seus dados</h2>
+    <p>Mantemos seus dados enquanto sua conta estiver ativa. Se você solicitar o encerramento da conta, apagamos ou anonimizamos os dados pessoais em prazo razoável, exceto o que formos legalmente obrigados a reter (ex: registos fiscais de pagamento).</p>
+
+    <h2>6. Cookies</h2>
+    <p>Usamos apenas um cookie técnico essencial, <em>httpOnly</em>, para manter sua sessão autenticada. Não usamos cookies de rastreamento, publicidade ou analytics de terceiros.</p>
+
+    <h2>7. Segurança</h2>
+    <p>Senhas são armazenadas com hash bcrypt (nunca em texto puro). Tokens de conexão social são armazenados criptografados (Fernet/AES). O tráfego é protegido por HTTPS. Isolamos os dados de cada loja por identificador de conta (tenant), impedindo que uma loja acesse dados de outra.</p>
+
+    <h2>8. Os seus direitos</h2>
+    <p>Você pode, a qualquer momento, solicitar:</p>
+    <ul>
+      <li><strong>Acesso</strong> aos dados que temos sobre você;</li>
+      <li><strong>Correção</strong> de dados incorretos;</li>
+      <li><strong>Exclusão</strong> da sua conta e dados pessoais;</li>
+      <li><strong>Portabilidade</strong> — exportação dos seus dados num formato estruturado;</li>
+      <li><strong>Oposição</strong> a determinados usos ou <strong>revogação</strong> do consentimento (ex: desconectar sua conta Google/Meta a qualquer momento, direto no app);</li>
+      <li>Apresentar reclamação junto à autoridade de proteção de dados do seu país (em Portugal, a CNPD; no Brasil, a ANPD).</li>
+    </ul>
+    <p>Pra exercer qualquer um desses direitos, entre em contato: <a href="mailto:obeliscoradical@gmail.com">obeliscoradical@gmail.com</a></p>
+
+    <h2>9. Menores de idade</h2>
+    <p>O TrendDrop PRO não é destinado a menores de 18 anos. Não coletamos intencionalmente dados de menores.</p>
+
+    <h2>10. Alterações nesta política</h2>
+    <p>Podemos atualizar esta política periodicamente. Mudanças relevantes serão comunicadas por e-mail ou aviso no app.</p>
+
+    <h2>11. Contato</h2>
+    <p>Obelisco Radical Unipessoal Lda. — NIF 516753924 — Lisboa, Portugal<br>
+    <a href="mailto:obeliscoradical@gmail.com">obeliscoradical@gmail.com</a></p>
+
+    <div class="foot">
+      Este documento é um rascunho preparado com apoio de IA, específico pro que o TrendDrop PRO realmente faz, e ainda não passou por revisão jurídica profissional.
+    </div>
+  </div>
+</body>
+</html>
