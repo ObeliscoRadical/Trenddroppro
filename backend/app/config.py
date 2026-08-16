@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
 
-    frontend_url: str = "http://localhost:5500"
+    frontend_url: str = "http://localhost:8000"
     cookie_secure: bool = False
 
     seed_admin_email: str = ""

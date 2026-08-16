@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.admin import router as admin_router
 from app.affiliates import router as affiliates_router
@@ -63,3 +66,14 @@ app.include_router(billing_router.router)
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse("/trenddrop-pro.html")
+
+
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
