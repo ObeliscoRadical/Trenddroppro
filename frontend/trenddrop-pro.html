@@ -1589,19 +1589,30 @@ const CONN_APPS = [
 const CONN_KEY = "trenddrop_social_conn"; // simulação local — só usada pra plataformas sem credenciais reais (hoje: TikTok)
 let CONN_STATUS = {};
 let SOCIAL_CONNECTIONS = [];
+let connStatusError = null;
 async function loadConnStatus(){
   try{
     const res = await window.storage.get(CONN_KEY, false);
     CONN_STATUS = res && res.value ? JSON.parse(res.value) : {};
   }catch(e){ CONN_STATUS = {}; }
+  connStatusError = null;
   try{
     SOCIAL_CONNECTIONS = await apiFetch("/social/connections");
-  }catch(e){ SOCIAL_CONNECTIONS = []; }
+  }catch(e){ SOCIAL_CONNECTIONS = []; connStatusError = e.message; }
 }
 async function saveConnStatus(){
   try{ await window.storage.set(CONN_KEY, JSON.stringify(CONN_STATUS), false); }catch(e){ console.error(e); }
 }
 function renderContas(){
+  if(connStatusError){
+    document.getElementById("connGrid").innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <h3>Não foi possível carregar</h3>
+        <p>${connStatusError}</p>
+      </div>`;
+    return;
+  }
   document.getElementById("connGrid").innerHTML = CONN_APPS.map(a=>{
     const real = SOCIAL_CONNECTIONS.find(c=>c.platform===a.id);
     const configured = !!(real && real.configured);
