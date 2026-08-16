@@ -1583,7 +1583,7 @@ async function disconnectAff(id){
    CONTAS CONECTADAS (Meta / TikTok)
 ========================================================= */
 const CONN_APPS = [
-  {id:"meta",name:"Meta (Facebook + Instagram)",icons:["fa-brands fa-facebook","fa-brands fa-instagram"],color:"#0081FB",redirect:"http://localhost:8000/api/social/meta/callback",callback:"/api/social/meta/callback",scopes:["pages_show_list","pages_manage_posts","instagram_business_basic","instagram_business_content_publish"]},
+  {id:"meta",name:"Meta (Facebook + Instagram)",icons:["fa-brands fa-facebook","fa-brands fa-instagram"],color:"#0081FB",redirect:"https://trenddroppro-production.up.railway.app/api/social/meta/callback",callback:"/api/social/meta/callback",scopes:["pages_show_list"]},
   {id:"tiktok",name:"TikTok",icons:["fa-brands fa-tiktok"],color:"#000000",redirect:"http://localhost:8000/api/social/tiktok/callback",callback:"/api/social/tiktok/callback",scopes:["user.info.basic"]},
 ];
 const CONN_KEY = "trenddrop_social_conn"; // simulação local — só usada pra plataformas sem credenciais reais (hoje: TikTok)

@@ -34,7 +34,7 @@ async def meta_connect(response: Response, user: CurrentUser = Depends(require_l
         "redirect_uri": settings.meta_redirect_uri,
         "state": state,
         "response_type": "code",
-        "scope": "pages_show_list,pages_manage_posts,instagram_business_basic,instagram_business_content_publish",
+        "scope": "pages_show_list",
     }
     redirect = RedirectResponse(f"https://www.facebook.com/{settings.meta_graph_version}/dialog/oauth?{urlencode(params)}")
     redirect.set_cookie(
