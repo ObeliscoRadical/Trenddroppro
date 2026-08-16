@@ -1807,9 +1807,33 @@ function goGenerateContent(id){
 ========================================================= */
 function populateGenPicker(){
   const sel = document.getElementById("genProductSelect");
+  const btn = document.getElementById("genBtn");
+  const active = AFF_PRODUCTS.filter(p=>p.status!=="removido");
+  if(active.length===0){
+    sel.innerHTML = `<option value="">Nenhum produto no catálogo</option>`;
+    sel.disabled = true;
+    btn.disabled = true;
+    document.getElementById("genResults").style.display = "none";
+    document.getElementById("genEmpty").style.display = "flex";
+    document.getElementById("genEmpty").innerHTML = `
+      <i class="fa-solid fa-database"></i>
+      <h3>Seu catálogo está vazio</h3>
+      <p>Pra gerar conteúdo, primeiro adicione um produto no Catálogo Dinâmico.</p>
+      <button class="btn btn-primary" type="button" onclick="document.querySelector('.nav-item[data-view=\\'catalogo\\']').click(); openAddProductModal();"><i class="fa-solid fa-plus"></i>Adicionar produto</button>`;
+    return;
+  }
+  sel.disabled = false;
+  btn.disabled = false;
   const prevVal = sel.value;
-  sel.innerHTML = AFF_PRODUCTS.filter(p=>p.status!=="removido").map(p=>`<option value="${p.id}">${p.emoji} ${p.name} — ${p.platform}</option>`).join("");
+  sel.innerHTML = active.map(p=>`<option value="${p.id}">${p.emoji} ${p.name} — ${p.platform}</option>`).join("");
   if([...sel.options].some(o=>o.value===prevVal)) sel.value = prevVal;
+  else if(document.getElementById("genResults").style.display==="none"){
+    document.getElementById("genEmpty").style.display = "flex";
+    document.getElementById("genEmpty").innerHTML = `
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <h3>Nenhum conteúdo gerado ainda</h3>
+      <p>Escolha um produto acima e clique em gerar — isso chama uma IA de verdade pra criar hooks, copy, artigo SEO e roteiro em PT e EN.</p>`;
+  }
 }
 const GEN_STATUS_STEPS = ["Analisando o produto...","Estudando ângulos de venda...","Escrevendo os 3 hooks...","Gerando copy e roteiro...","Traduzindo para o inglês...","Finalizando bundle..."];
 let genStatusTimer = null;
@@ -1837,7 +1861,7 @@ async function generateContentBundle(){
   const sel = document.getElementById("genProductSelect");
   const id = parseInt(sel.value);
   const p = AFF_PRODUCTS.find(x=>x.id===id) || AFF_PRODUCTS[0];
-  if(!p) return;
+  if(!p){ showToast("Adicione um produto no Catálogo Dinâmico primeiro"); return; }
   const btn = document.getElementById("genBtn");
   btn.disabled = true;
   document.getElementById("genEmpty").style.display = "none";
