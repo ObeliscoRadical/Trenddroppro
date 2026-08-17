@@ -2,15 +2,22 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.db import catalog_products, removal_queue
+from app.catalog_suggestions import run_fetch_for_tenant
+from app.db import catalog_products, catalog_suggestions, removal_queue
 from app.dependencies import CurrentUser, require_full_plan, require_lojista
 from app.models import (
+    BulkApproveIn,
     CatalogProductCreateIn,
     CatalogProductOut,
     CatalogProductUpdateIn,
+    CatalogSuggestionOut,
+    FetchSuggestionsIn,
+    FetchSuggestionsOut,
     FlagForRemovalIn,
     RemovalQueueItemOut,
+    SourceStatusOut,
 )
+from app.product_sources.registry import sources_status
 
 router = APIRouter(prefix="/api/catalog", tags=["catalog_ops"], dependencies=[Depends(require_full_plan)])
 
@@ -103,3 +110,81 @@ async def confirm_removal(product_id: int, user: CurrentUser = Depends(require_l
 @router.get("/removal-queue", response_model=list[RemovalQueueItemOut])
 async def list_removal_queue(user: CurrentUser = Depends(require_lojista)):
     return await removal_queue.find({"tenant_id": user.tenant_id}, {"_id": 0, "tenant_id": 0, "created_at": 0}).to_list(length=None)
+
+
+@router.get("/sources/status", response_model=list[SourceStatusOut])
+async def list_sources_status(user: CurrentUser = Depends(require_lojista)):
+    return sources_status()
+
+
+@router.post("/suggestions/fetch", response_model=FetchSuggestionsOut)
+async def fetch_suggestions(data: FetchSuggestionsIn, user: CurrentUser = Depends(require_lojista)):
+    result = await run_fetch_for_tenant(user.tenant_id, data.categories, data.limit)
+    return FetchSuggestionsOut(**result)
+
+
+@router.get("/suggestions", response_model=list[CatalogSuggestionOut])
+async def list_suggestions(user: CurrentUser = Depends(require_lojista)):
+    docs = (
+        await catalog_suggestions.find({"tenant_id": user.tenant_id, "status": "pendente"})
+        .sort("id", -1)
+        .to_list(length=None)
+    )
+    return [CatalogSuggestionOut(**{k: v for k, v in d.items() if k not in ("_id", "tenant_id")}) for d in docs]
+
+
+async def _get_suggestion(tenant_id: str, suggestion_id: int) -> dict:
+    doc = await catalog_suggestions.find_one({"tenant_id": tenant_id, "id": suggestion_id})
+    if not doc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Sugestão não encontrada")
+    return doc
+
+
+async def _promote_suggestion(tenant_id: str, doc: dict) -> dict:
+    next_id = await _next_product_id(tenant_id)
+    product = {
+        "tenant_id": tenant_id,
+        "id": next_id,
+        "name": doc["name"],
+        "emoji": doc["emoji"],
+        "platform": doc["platform_id"],
+        "category": doc["category"],
+        "fase": "Fase 1",
+        "margin": doc["margin"],
+        "clicks": 0,
+        "revenue": 0.0,
+        "momentum": doc.get("momentum", "media"),
+        "status": "ativo",
+        "created_at": datetime.now(timezone.utc),
+    }
+    await catalog_products.insert_one(product)
+    await catalog_suggestions.update_one(
+        {"tenant_id": tenant_id, "id": doc["id"]}, {"$set": {"status": "aprovado"}}
+    )
+    return product
+
+
+@router.post("/suggestions/{suggestion_id}/approve", response_model=CatalogProductOut)
+async def approve_suggestion(suggestion_id: int, user: CurrentUser = Depends(require_lojista)):
+    doc = await _get_suggestion(user.tenant_id, suggestion_id)
+    product = await _promote_suggestion(user.tenant_id, doc)
+    return CatalogProductOut(**{k: v for k, v in product.items() if k not in ("tenant_id", "created_at")})
+
+
+@router.post("/suggestions/{suggestion_id}/reject")
+async def reject_suggestion(suggestion_id: int, user: CurrentUser = Depends(require_lojista)):
+    await _get_suggestion(user.tenant_id, suggestion_id)
+    await catalog_suggestions.update_one(
+        {"tenant_id": user.tenant_id, "id": suggestion_id}, {"$set": {"status": "rejeitado"}}
+    )
+    return {"ok": True}
+
+
+@router.post("/suggestions/approve-bulk")
+async def approve_suggestions_bulk(data: BulkApproveIn, user: CurrentUser = Depends(require_lojista)):
+    docs = await catalog_suggestions.find(
+        {"tenant_id": user.tenant_id, "id": {"$in": data.ids}, "status": "pendente"}
+    ).to_list(length=None)
+    for doc in docs:
+        await _promote_suggestion(user.tenant_id, doc)
+    return {"ok": True, "count": len(docs)}

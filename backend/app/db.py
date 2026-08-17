@@ -20,6 +20,7 @@ content_bundles = db["content_bundles"]
 command_settings = db["command_settings"]
 revenue_snapshots = db["revenue_snapshots"]
 scan_usage = db["scan_usage"]
+catalog_suggestions = db["catalog_suggestions"]
 
 
 async def ensure_indexes():
@@ -38,3 +39,5 @@ async def ensure_indexes():
     await command_settings.create_index("tenant_id", unique=True)
     await revenue_snapshots.create_index([("tenant_id", 1), ("date", 1)], unique=True)
     await scan_usage.create_index([("tenant_id", 1), ("date", 1)], unique=True)
+    await catalog_suggestions.create_index([("tenant_id", 1), ("id", 1)], unique=True)
+    await catalog_suggestions.create_index([("tenant_id", 1), ("status", 1)])

@@ -252,6 +252,41 @@ class BulkApproveIn(BaseModel):
     ids: list[int]
 
 
+SuggestionStatus = Literal["pendente", "aprovado", "rejeitado"]
+
+
+class CatalogSuggestionOut(BaseModel):
+    id: int
+    platform_id: str
+    name: str
+    emoji: str
+    category: str
+    price: float
+    margin: int
+    momentum: Momentum
+    affiliate_url: str
+    status: SuggestionStatus
+    created_at: datetime
+
+
+class FetchSuggestionsIn(BaseModel):
+    categories: list[str] = Field(default_factory=list, max_length=10)
+    limit: int = Field(default=15, ge=1, le=20)
+
+
+class SourceStatusOut(BaseModel):
+    platform_id: str
+    configured: bool
+
+
+class FetchSuggestionsOut(BaseModel):
+    mode: Literal["fila", "autonomo"]
+    fetched: int
+    inserted_direct: int
+    sources_used: list[str]
+    sources_skipped: list[str]
+
+
 class CommandSettingsOut(BaseModel):
     autonomyOn: bool
     suggestionsPerDay: int

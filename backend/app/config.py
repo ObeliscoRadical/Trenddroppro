@@ -39,5 +39,27 @@ class Settings(BaseSettings):
     tiktok_client_secret: str = ""
     tiktok_redirect_uri: str = "http://localhost:8000/api/social/tiktok/callback"
 
+    aliexpress_app_key: str = ""
+    aliexpress_app_secret: str = ""
+    aliexpress_tracking_id: str = ""
+
+    awin_api_token: str = ""
+    awin_publisher_id: str = ""
+
+    amazon_pa_api_access_key: str = ""
+    amazon_pa_api_secret_key: str = ""
+    amazon_pa_api_partner_tag: str = ""
+    amazon_pa_api_host: str = "webservices.amazon.com"
+    amazon_pa_api_region: str = "us-east-1"
+
+    rakuten_api_token: str = ""
+    rakuten_site_id: str = ""
+
+    shopee_app_id: str = ""
+    shopee_app_secret: str = ""
+
+    kiwify_api_token: str = ""
+    kiwify_account_id: str = ""
+
 
 settings = Settings()

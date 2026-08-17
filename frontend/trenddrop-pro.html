@@ -835,6 +835,7 @@ tbody tr:hover{background:var(--surface);}
     <section class="view" id="view-catalogo">
       <div class="view-tabs" id="catalogTabs">
         <button class="view-tab active" data-ctab="produtos" type="button">Produtos ativos</button>
+        <button class="view-tab" data-ctab="sugestoes" type="button">Sugestões automáticas<span class="nav-count" id="suggestionsCount">0</span></button>
         <button class="view-tab" data-ctab="fila" type="button">Fila de limpeza<span class="nav-count" id="queueCount">0</span></button>
       </div>
 
@@ -872,6 +873,16 @@ tbody tr:hover{background:var(--surface);}
       <div id="catalogTabFila" style="display:none;">
         <div class="catalog-info"><strong style="color:var(--text);">Como a auto-limpeza decide:</strong> um produto entra nesta fila quando fica 7 ou mais dias com cliques 40% abaixo da própria média, ou 14 dias seguidos sem nenhuma venda. Nada é removido sozinho — cada item espera sua confirmação.</div>
         <div id="cleanupList"></div>
+      </div>
+
+      <div id="catalogTabSugestoes" style="display:none;">
+        <div class="catalog-info"><strong style="color:var(--text);">Como funciona:</strong> busca produtos em alta nas plataformas conectadas com API liberada. Se a autonomia (Centro de Comando IA) estiver desligada, os produtos caem aqui pra você aprovar um a um ou em lote. Se estiver ligada, entram direto no catálogo.</div>
+        <div class="filter-bar" style="align-items:center;">
+          <button class="btn btn-primary" type="button" id="fetchSuggestionsBtn"><i class="fa-solid fa-magnifying-glass"></i>Buscar produtos agora</button>
+          <button class="btn" type="button" id="approveAllSuggestionsBtn" style="display:none;"><i class="fa-solid fa-check-double"></i>Aprovar todos</button>
+        </div>
+        <div id="sourcesStatusRow" class="aff-status-row" style="display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 16px;"></div>
+        <div id="suggestionsList"></div>
       </div>
     </section>
 
@@ -1110,6 +1121,7 @@ document.querySelectorAll(".view-tab").forEach(t=>{
     t.classList.add("active");
     document.getElementById("catalogTabProdutos").style.display = t.dataset.ctab==="produtos" ? "block":"none";
     document.getElementById("catalogTabFila").style.display = t.dataset.ctab==="fila" ? "block":"none";
+    document.getElementById("catalogTabSugestoes").style.display = t.dataset.ctab==="sugestoes" ? "block":"none";
   });
 });
 
@@ -1283,6 +1295,9 @@ async function bootstrapAuthenticatedApp(){
   await loadCatalogProducts();
   await loadRemovalQueue();
   renderCleanupQueue();
+  await loadSuggestions();
+  await loadSourcesStatus();
+  renderSuggestionsBadge();
   await loadReviewQueue();
   updateReviewBadge();
   await loadCommandSettings();
@@ -2216,10 +2231,109 @@ function renderCleanupQueue(){
       </div>
     </div>`).join("");
 }
+let CATALOG_SUGGESTIONS = [];
+let SOURCES_STATUS = [];
+const PLATFORM_LABELS = {aliexpress:"AliExpress", awin:"Awin", amazon:"Amazon", rakuten:"Rakuten", shopee:"Shopee", kiwify:"Kiwify"};
+async function loadSuggestions(){
+  CATALOG_SUGGESTIONS = await apiFetch("/catalog/suggestions");
+}
+async function loadSourcesStatus(){
+  SOURCES_STATUS = await apiFetch("/catalog/sources/status");
+}
+function renderSourcesStatus(){
+  const el = document.getElementById("sourcesStatusRow");
+  if(!el) return;
+  el.innerHTML = SOURCES_STATUS.map(s=>`
+    <span class="status-pill ${s.configured?'ok':'off'}">${PLATFORM_LABELS[s.platform_id]||s.platform_id} · ${s.configured?'API conectada':'aguardando API'}</span>
+  `).join("");
+}
+function renderSuggestionsBadge(){
+  const els = [document.getElementById("suggestionsCount")];
+  els.forEach(el=>{ if(el) el.textContent = CATALOG_SUGGESTIONS.length; });
+  const bulkBtn = document.getElementById("approveAllSuggestionsBtn");
+  if(bulkBtn) bulkBtn.style.display = CATALOG_SUGGESTIONS.length>0 ? "inline-flex" : "none";
+}
+function renderSuggestions(){
+  renderSuggestionsBadge();
+  const list = document.getElementById("suggestionsList");
+  if(!list) return;
+  if(CATALOG_SUGGESTIONS.length===0){
+    list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-wand-magic-sparkles"></i><h3>Nenhuma sugestão pendente</h3><p>Clique em "Buscar produtos agora" pra puxar produtos em alta das plataformas com API conectada. Enquanto nenhuma tiver API liberada, isso aqui fica vazio mesmo.</p></div>`;
+    return;
+  }
+  list.innerHTML = CATALOG_SUGGESTIONS.map(s=>`
+    <div class="queue-item">
+      <div class="queue-top">
+        <div><div class="queue-name">${s.emoji} ${s.name}</div><div class="queue-meta">${PLATFORM_LABELS[s.platform_id]||s.platform_id} · ${s.category}</div></div>
+        <span class="status-pill warn">Aguardando aprovação</span>
+      </div>
+      <div class="queue-stats">
+        <div class="aff-meta-box"><div class="v">${s.price.toFixed(2)}</div><div class="l">Preço</div></div>
+        <div class="aff-meta-box"><div class="v">${s.margin}%</div><div class="l">Margem</div></div>
+      </div>
+      <div class="queue-actions">
+        <button class="btn" style="flex:1;justify-content:center;" onclick="rejectSuggestion(${s.id})"><i class="fa-solid fa-xmark"></i>Rejeitar</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="approveSuggestion(${s.id})"><i class="fa-solid fa-check"></i>Aprovar</button>
+      </div>
+    </div>`).join("");
+}
+async function fetchSuggestionsNow(){
+  const btn = document.getElementById("fetchSuggestionsBtn");
+  btn.disabled = true;
+  try{
+    const result = await apiFetch("/catalog/suggestions/fetch", { method:"POST", body: JSON.stringify({categories:[], limit:15}) });
+    await loadSuggestions();
+    renderSuggestions();
+    if(result.mode==="autonomo" && result.inserted_direct>0){
+      await loadCatalogProducts();
+      renderCatalogProducts();
+      showToast(`${result.inserted_direct} produto(s) inserido(s) direto no catálogo (modo autônomo)`);
+    }else if(result.fetched>0){
+      showToast(`${result.fetched} sugestão(ões) na fila de aprovação`);
+    }else if(result.sources_used.length===0){
+      showToast("Nenhuma plataforma com API conectada ainda — configure ao menos uma");
+    }else{
+      showToast("Nenhum produto novo encontrado dessa vez");
+    }
+  }catch(e){ showToast(e.message); }
+  finally{ btn.disabled = false; }
+}
+document.getElementById("fetchSuggestionsBtn").addEventListener("click", fetchSuggestionsNow);
+async function approveSuggestion(id){
+  try{
+    await apiFetch(`/catalog/suggestions/${id}/approve`, { method:"POST" });
+    await loadSuggestions();
+    await loadCatalogProducts();
+    renderSuggestions();
+    renderCatalogProducts();
+    showToast("Produto aprovado e adicionado ao catálogo");
+  }catch(e){ showToast(e.message); }
+}
+async function rejectSuggestion(id){
+  try{
+    await apiFetch(`/catalog/suggestions/${id}/reject`, { method:"POST" });
+    await loadSuggestions();
+    renderSuggestions();
+    showToast("Sugestão rejeitada");
+  }catch(e){ showToast(e.message); }
+}
+document.getElementById("approveAllSuggestionsBtn").addEventListener("click", async ()=>{
+  try{
+    const ids = CATALOG_SUGGESTIONS.map(s=>s.id);
+    const result = await apiFetch("/catalog/suggestions/approve-bulk", { method:"POST", body: JSON.stringify({ids}) });
+    await loadSuggestions();
+    await loadCatalogProducts();
+    renderSuggestions();
+    renderCatalogProducts();
+    showToast(`${result.count} produto(s) aprovado(s)`);
+  }catch(e){ showToast(e.message); }
+});
 function renderCatalogView(){
   populateCatalogFilters();
   renderCatalogProducts();
   renderCleanupQueue();
+  renderSuggestions();
+  renderSourcesStatus();
 }
 ["catPlatFilter","catFaseFilter","catMarginFilter","catMomentumFilter"].forEach(id=>{
   document.getElementById(id).addEventListener("change", renderCatalogProducts);

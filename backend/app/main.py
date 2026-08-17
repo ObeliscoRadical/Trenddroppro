@@ -13,6 +13,7 @@ from app.auth import google, router as auth_router
 from app.billing import router as billing_router
 from app.catalog import router as catalog_router
 from app.catalog_ops import router as catalog_ops_router
+from app.catalog_suggestions import run_daily_suggestions_for_all_tenants
 from app.command import router as command_router
 from app.config import settings
 from app.content import router as content_router
@@ -30,6 +31,9 @@ async def lifespan(app: FastAPI):
 
     scheduler = AsyncIOScheduler(timezone="UTC")
     scheduler.add_job(snapshot_all_tenants, "cron", hour=3, minute=0, id="daily_revenue_snapshot")
+    scheduler.add_job(
+        run_daily_suggestions_for_all_tenants, "cron", hour=4, minute=0, id="daily_catalog_suggestions"
+    )
     scheduler.start()
     await snapshot_all_tenants()
 
