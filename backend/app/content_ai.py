@@ -9,11 +9,11 @@ class ContentGenerationError(Exception):
     pass
 
 
-async def generate_bundle(product: dict) -> dict:
-    if not settings.anthropic_api_key:
-        raise ContentGenerationError("IA não configurada")
+MAX_ATTEMPTS = 3
 
-    prompt = f"""Você é um redator especialista em marketing de afiliados no Brasil. Gere conteúdo promocional para o produto abaixo.
+
+def _build_prompt(product: dict) -> str:
+    return f"""Você é um redator especialista em marketing de afiliados no Brasil. Gere conteúdo promocional para o produto abaixo.
 
 Produto: {product['name']}
 Categoria: {product['category']}
@@ -25,28 +25,43 @@ Responda APENAS com um JSON válido (sem markdown, sem crases, sem texto antes o
 
 O array "hooks" deve ter exatamente 3 itens, ordenados do maior score para o menor. Seja direto e conciso — cada campo de texto deve ter no máximo 3 a 4 frases curtas."""
 
+
+def _request_bundle(client: anthropic.Anthropic, prompt: str) -> dict:
+    response = client.messages.create(
+        model="claude-opus-5",
+        max_tokens=2000,
+        output_config={"effort": "low"},
+        messages=[{"role": "user", "content": prompt}],
+    )
+    text_blocks = [b for b in response.content if b.type == "text"]
+    if not text_blocks:
+        raise ContentGenerationError("Resposta da IA sem texto")
+
+    raw = text_blocks[-1].text.strip()
+    raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    parsed = json.loads(raw)
+
+    hooks = [h for h in parsed["hooks"] if h.get("pt") and h.get("en")]
+    content = parsed["content"]
+    if len(hooks) < 3 or "pt" not in content or "en" not in content:
+        raise ContentGenerationError("JSON da IA incompleto")
+    return {"hooks": hooks[:3], "content": content}
+
+
+async def generate_bundle(product: dict) -> dict:
+    if not settings.anthropic_api_key:
+        raise ContentGenerationError("IA não configurada")
+
+    prompt = _build_prompt(product)
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-    try:
-        response = client.messages.create(
-            model="claude-opus-5",
-            max_tokens=2000,
-            output_config={"effort": "low"},
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text_blocks = [b for b in response.content if b.type == "text"]
-        if not text_blocks:
-            raise ContentGenerationError("Resposta da IA sem texto")
 
-        raw = text_blocks[-1].text.strip()
-        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        parsed = json.loads(raw)
-
-        hooks = [h for h in parsed["hooks"] if h.get("pt") and h.get("en")]
-        content = parsed["content"]
-        if len(hooks) < 3 or "pt" not in content or "en" not in content:
-            raise ContentGenerationError("JSON da IA incompleto")
-        return {"hooks": hooks[:3], "content": content}
-    except ContentGenerationError:
-        raise
-    except Exception as exc:
-        raise ContentGenerationError("Falha ao gerar conteúdo") from exc
+    last_error = ContentGenerationError("Falha ao gerar conteúdo")
+    for _ in range(MAX_ATTEMPTS):
+        try:
+            return _request_bundle(client, prompt)
+        except ContentGenerationError as exc:
+            last_error = exc
+        except Exception as exc:
+            last_error = ContentGenerationError("Falha ao gerar conteúdo")
+            last_error.__cause__ = exc
+    raise last_error
