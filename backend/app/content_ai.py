@@ -41,11 +41,11 @@ O array "hooks" deve ter exatamente 3 itens, ordenados do maior score para o men
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         parsed = json.loads(raw)
 
-        hooks = parsed["hooks"]
+        hooks = [h for h in parsed["hooks"] if h.get("pt") and h.get("en")]
         content = parsed["content"]
-        if len(hooks) != 3 or "pt" not in content or "en" not in content:
+        if len(hooks) < 3 or "pt" not in content or "en" not in content:
             raise ContentGenerationError("JSON da IA incompleto")
-        return {"hooks": hooks, "content": content}
+        return {"hooks": hooks[:3], "content": content}
     except ContentGenerationError:
         raise
     except Exception as exc:
